@@ -1,0 +1,5 @@
+{
+  "name": "Unimarket Admin Dashboard",
+  "description": "A comprehensive admin dashboard for the Unimarket student marketplace, featuring real-time analytics, user management, dispute resolution, and AI-powered insights using the Gemini API.",
+  "requestFramePermissions": []
+}

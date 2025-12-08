@@ -1,4 +1,4 @@
-import { DashboardMetrics, Product, User, Dispute, UserStatus, ProductStatus } from '../types';
+import { DashboardMetrics, Product, User, Dispute, UserStatus, ProductStatus, UserRole } from '../types';
 import { mockUsers, mockProducts, mockDisputes, mockMetrics } from '../mockData';
 
 // Default URL from user prompt
@@ -125,14 +125,14 @@ class ApiService {
     }
   }
 
-  async updateUserStatus(userId: string, status: UserStatus): Promise<void> {
+  async updateUserStatus(userId: string, status: UserStatus, reason?: string): Promise<void> {
     try {
         await this.request(`admin/users/${userId}/status`, {
             method: 'PATCH',
-            body: JSON.stringify({ status })
+            body: JSON.stringify({ status, reason })
         });
     } catch (e) {
-        console.log(`[Mock] Updated user ${userId} status to ${status}`);
+        console.log(`[Mock] Updated user ${userId} status to ${status} reason: ${reason}`);
     }
   }
 
@@ -141,6 +141,30 @@ class ApiService {
         await this.request(`admin/users/${userId}`, { method: 'DELETE' });
     } catch (e) {
         console.log(`[Mock] Deleted user ${userId}`);
+    }
+  }
+
+  async createAdmin(data: { name: string; email: string; university: string }): Promise<User> {
+    try {
+      return await this.request<User>('admin/users/admin', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    } catch (e) {
+      // Mock creation
+      const newAdmin: User = {
+        id: `u${Date.now()}`,
+        name: data.name,
+        email: data.email,
+        university: data.university,
+        role: UserRole.ADMIN,
+        status: UserStatus.VERIFIED,
+        joinDate: new Date().toISOString().split('T')[0],
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=6366f1&color=fff`
+      };
+      // We don't modify mockUsers array directly here as we aren't maintaining global mock state 
+      // but returning it allows the UI to update optimistically
+      return newAdmin;
     }
   }
 

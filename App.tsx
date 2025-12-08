@@ -4,6 +4,9 @@ import DashboardHome from './components/DashboardHome';
 import ListingsView from './components/ListingsView';
 import UsersView from './components/UsersView';
 import DisputesView from './components/DisputesView';
+import TransactionsView from './components/TransactionsView';
+import AuditLogsView from './components/AuditLogsView';
+import AnnouncementsView from './components/AnnouncementsView';
 import SettingsView from './components/SettingsView';
 import { ViewState } from './types';
 import { Bell, Search, GraduationCap, LogIn, Lock } from 'lucide-react';
@@ -45,6 +48,12 @@ const App: React.FC = () => {
         return <UsersView />;
       case 'DISPUTES':
         return <DisputesView />;
+      case 'TRANSACTIONS':
+        return <TransactionsView />;
+      case 'AUDIT_LOGS':
+        return <AuditLogsView />;
+      case 'ANNOUNCEMENTS':
+        return <AnnouncementsView />;
       case 'SETTINGS':
         return <SettingsView />;
       default:

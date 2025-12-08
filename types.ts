@@ -46,7 +46,31 @@ export interface Transaction {
   seller: string;
   amount: number;
   date: string;
-  status: 'COMPLETED' | 'PENDING' | 'DISPUTED';
+  status: 'COMPLETED' | 'PENDING' | 'DISPUTED' | 'REFUNDED';
+  paymentMethod: 'STRIPE' | 'PAYPAL' | 'CASH';
+}
+
+export interface AuditLog {
+  id: string;
+  adminName: string;
+  action: string;
+  target: string; // e.g., "User: John Doe" or "Listing: #123"
+  timestamp: string;
+  details: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  message: string;
+  targetAudience: 'ALL' | 'BUYERS' | 'SELLERS' | 'FACULTY';
+  priority: 'INFO' | 'WARNING' | 'CRITICAL';
+  status: 'ACTIVE' | 'EXPIRED';
+  postedAt: string;
+  expiresAt: string;
+  views: number;
+  author: string;
 }
 
 export interface DashboardMetrics {
@@ -59,7 +83,7 @@ export interface DashboardMetrics {
   categoryDistribution: { name: string; value: number }[];
 }
 
-export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'DISPUTES' | 'SETTINGS';
+export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'DISPUTES' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'SETTINGS';
 
 export interface DisputeMessage {
   id: string;

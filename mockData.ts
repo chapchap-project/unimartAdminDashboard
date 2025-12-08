@@ -1,4 +1,4 @@
-import { User, Product, Transaction, DashboardMetrics, UserRole, UserStatus, ProductStatus, Dispute } from './types';
+import { User, Product, Transaction, DashboardMetrics, UserRole, UserStatus, ProductStatus, Dispute, AuditLog, Announcement } from './types';
 
 export const mockUsers: User[] = [
   { id: 'u1', name: 'Alex Johnson', email: 'alex.j@uni.edu', university: 'State University', role: UserRole.STUDENT, status: UserStatus.VERIFIED, joinDate: '2023-09-01', avatarUrl: 'https://picsum.photos/200/200?random=1' },
@@ -17,9 +17,11 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockTransactions: Transaction[] = [
-  { id: 't1', product: 'Mini Fridge', buyer: 'Mike Ross', seller: 'Sarah Connor', amount: 80, date: '2023-10-22', status: 'COMPLETED' },
-  { id: 't2', product: 'Chemistry Set', buyer: 'Alex Johnson', seller: 'Jessica Pearson', amount: 50, date: '2023-10-24', status: 'COMPLETED' },
-  { id: 't3', product: 'Broken Laptop', buyer: 'Sarah Connor', seller: 'Louis Litt', amount: 120, date: '2023-10-25', status: 'DISPUTED' },
+  { id: 't1', product: 'Mini Fridge', buyer: 'Mike Ross', seller: 'Sarah Connor', amount: 80, date: '2023-10-22', status: 'COMPLETED', paymentMethod: 'STRIPE' },
+  { id: 't2', product: 'Chemistry Set', buyer: 'Alex Johnson', seller: 'Jessica Pearson', amount: 50, date: '2023-10-24', status: 'COMPLETED', paymentMethod: 'PAYPAL' },
+  { id: 't3', product: 'Broken Laptop', buyer: 'Sarah Connor', seller: 'Louis Litt', amount: 120, date: '2023-10-25', status: 'DISPUTED', paymentMethod: 'STRIPE' },
+  { id: 't4', product: 'Organic Chemistry Set', buyer: 'Mike Ross', seller: 'Alex Johnson', amount: 55, date: '2023-10-28', status: 'REFUNDED', paymentMethod: 'STRIPE' },
+  { id: 't5', product: 'Used Sofa', buyer: 'John Doe', seller: 'Jane Doe', amount: 150, date: '2023-11-01', status: 'PENDING', paymentMethod: 'CASH' },
 ];
 
 export const mockDisputes: Dispute[] = [
@@ -63,6 +65,52 @@ export const mockDisputes: Dispute[] = [
       { id: 'm6', role: 'SELLER', sender: 'Alex Johnson', text: 'I definitely left it there. Maybe someone took it?', timestamp: 'Oct 27, 09:30 AM' },
     ]
   }
+];
+
+export const mockAuditLogs: AuditLog[] = [
+  { id: 'log1', adminName: 'Jessica Pearson', action: 'BAN_USER', target: 'Louis Litt (u5)', timestamp: '2023-11-05 14:30', details: 'User banned for repeated fraud attempts', severity: 'HIGH' },
+  { id: 'log2', adminName: 'Jessica Pearson', action: 'RESOLVE_DISPUTE', target: 'Dispute #d2', timestamp: '2023-11-04 09:15', details: 'Resolved in favor of buyer due to lack of shipping proof', severity: 'MEDIUM' },
+  { id: 'log3', adminName: 'System', action: 'FLAG_LISTING', target: 'Product #p5', timestamp: '2023-10-26 11:00', details: 'AI Flagged for potential prohibited content', severity: 'LOW' },
+  { id: 'log4', adminName: 'Jessica Pearson', action: 'LOGIN', target: 'Admin Portal', timestamp: '2023-11-06 08:00', details: 'Successful login from IP 192.168.1.1', severity: 'LOW' },
+];
+
+export const mockAnnouncements: Announcement[] = [
+    { 
+        id: 'a1', 
+        title: 'Platform Maintenance Scheduled', 
+        message: 'Unimarket will be down for scheduled maintenance on Sunday, Nov 12th from 2AM to 4AM EST.', 
+        targetAudience: 'ALL', 
+        priority: 'WARNING', 
+        status: 'ACTIVE', 
+        postedAt: '2023-11-08', 
+        expiresAt: '2023-11-12', 
+        views: 1250, 
+        author: 'Jessica Pearson' 
+    },
+    { 
+        id: 'a2', 
+        title: 'Safety Tip: Meeting in Person', 
+        message: 'Remember to always meet in well-lit, public areas when exchanging items. The Campus Library is a designated safe zone.', 
+        targetAudience: 'ALL', 
+        priority: 'INFO', 
+        status: 'ACTIVE', 
+        postedAt: '2023-11-01', 
+        expiresAt: '2023-12-01', 
+        views: 3420, 
+        author: 'System' 
+    },
+     { 
+        id: 'a3', 
+        title: 'New Feature: Instant Messaging', 
+        message: 'You can now message buyers and sellers directly within the app without sharing your phone number.', 
+        targetAudience: 'ALL', 
+        priority: 'INFO', 
+        status: 'EXPIRED', 
+        postedAt: '2023-10-01', 
+        expiresAt: '2023-10-15', 
+        views: 5600, 
+        author: 'Jessica Pearson' 
+    }
 ];
 
 export const mockMetrics: DashboardMetrics = {

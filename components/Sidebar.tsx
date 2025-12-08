@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState } from '../types';
-import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -13,6 +13,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
     { id: 'USERS', label: 'User Management', icon: Users },
     { id: 'LISTINGS', label: 'Listings', icon: ShoppingBag },
     { id: 'DISPUTES', label: 'Disputes', icon: AlertCircle },
+    { id: 'TRANSACTIONS', label: 'Transactions', icon: CreditCard },
+    { id: 'ANNOUNCEMENTS', label: 'Broadcasts', icon: Megaphone },
   ];
 
   return (
@@ -61,6 +63,13 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       </div>
 
       <div className="p-3 mb-4 space-y-1">
+        <button 
+          onClick={() => setView('AUDIT_LOGS')}
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'AUDIT_LOGS' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+        >
+          <FileText size={20} />
+          <span className="font-medium text-sm">Audit Logs</span>
+        </button>
         <button 
           onClick={() => setView('SETTINGS')}
           className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'SETTINGS' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}

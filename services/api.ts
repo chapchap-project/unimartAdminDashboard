@@ -1,5 +1,5 @@
-import { DashboardMetrics, Product, User, Dispute, UserStatus, ProductStatus, UserRole } from '../types';
-import { mockUsers, mockProducts, mockDisputes, mockMetrics } from '../mockData';
+import { DashboardMetrics, Product, User, Dispute, UserStatus, ProductStatus, UserRole, Transaction, AuditLog, Announcement } from '../types';
+import { mockUsers, mockProducts, mockDisputes, mockMetrics, mockTransactions, mockAuditLogs, mockAnnouncements } from '../mockData';
 
 // Default URL from user prompt
 const DEFAULT_API_URL = 'https://hstrvyypbv.apidog.io/api';
@@ -214,6 +214,56 @@ class ApiService {
      } catch (e) {
          console.log(`[Mock] Resolved dispute ${disputeId} as ${resolution}`);
      }
+  }
+
+  // --- Transactions ---
+  async getTransactions(): Promise<Transaction[]> {
+    try {
+        return await this.request<Transaction[]>('admin/transactions');
+    } catch (e) {
+        return mockTransactions;
+    }
+  }
+
+  // --- Audit Logs ---
+  async getAuditLogs(): Promise<AuditLog[]> {
+    try {
+        return await this.request<AuditLog[]>('admin/audit-logs');
+    } catch (e) {
+        return mockAuditLogs;
+    }
+  }
+
+  // --- Announcements ---
+  async getAnnouncements(): Promise<Announcement[]> {
+    try {
+        return await this.request<Announcement[]>('admin/announcements');
+    } catch (e) {
+        return mockAnnouncements;
+    }
+  }
+
+  async createAnnouncement(data: Partial<Announcement>): Promise<Announcement> {
+    try {
+        return await this.request<Announcement>('admin/announcements', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    } catch (e) {
+        const newAnnouncement: Announcement = {
+            id: `a${Date.now()}`,
+            title: data.title || 'No Title',
+            message: data.message || '',
+            targetAudience: data.targetAudience as any || 'ALL',
+            priority: data.priority as any || 'INFO',
+            status: 'ACTIVE',
+            postedAt: new Date().toISOString().split('T')[0],
+            expiresAt: data.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            views: 0,
+            author: 'Current Admin'
+        };
+        return newAnnouncement;
+    }
   }
 }
 

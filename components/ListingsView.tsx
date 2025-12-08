@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product, ProductStatus } from '../types';
-import { Eye, Trash2, CheckCircle, AlertTriangle, ShieldAlert, Flag, Search, Filter, XCircle } from 'lucide-react';
+import { Eye, Trash2, CheckCircle, AlertTriangle, ShieldAlert, Flag, Search, Filter, XCircle, Loader2 } from 'lucide-react';
 import { analyzeListingForSafety } from '../services/geminiService';
+import { api } from '../services/api';
 
-interface ListingsViewProps {
-  products: Product[];
-}
-
-const ListingsView: React.FC<ListingsViewProps> = ({ products: initialProducts }) => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+const ListingsView: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await api.getProducts();
+        setProducts(data);
+      } catch (e) {
+        console.error("Failed to load products", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleSafetyCheck = async (product: Product) => {
     setAnalyzingId(product.id);
@@ -18,18 +30,30 @@ const ListingsView: React.FC<ListingsViewProps> = ({ products: initialProducts }
     alert(`Safety Check for "${product.title}":\nSafe: ${result.safe}\nReason: ${result.reason}`);
     
     if (!result.safe) {
-        setProducts(products.map(p => p.id === product.id ? { ...p, status: ProductStatus.FLAGGED } : p));
+        handleFlag(product.id);
     }
     setAnalyzingId(null);
   };
 
-  const handleFlag = (id: string) => {
+  const handleFlag = async (id: string) => {
+    // Optimistic
     setProducts(products.map(p => p.id === id ? { ...p, status: ProductStatus.FLAGGED } : p));
+    try {
+        await api.updateProductStatus(id, ProductStatus.FLAGGED);
+    } catch (e) {
+        console.error("Failed to flag product", e);
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
       if(confirm("Remove this listing permanently?")) {
+          // Optimistic
           setProducts(products.filter(p => p.id !== id));
+          try {
+              await api.deleteProduct(id);
+          } catch (e) {
+              console.error("Failed to delete product", e);
+          }
       }
   }
 
@@ -37,6 +61,10 @@ const ListingsView: React.FC<ListingsViewProps> = ({ products: initialProducts }
     p.title.toLowerCase().includes(search.toLowerCase()) || 
     p.seller.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+  }
 
   return (
     <div className="space-y-6 pb-10 animate-fade-in">

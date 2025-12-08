@@ -4,9 +4,10 @@ import DashboardHome from './components/DashboardHome';
 import ListingsView from './components/ListingsView';
 import UsersView from './components/UsersView';
 import DisputesView from './components/DisputesView';
+import SettingsView from './components/SettingsView';
 import { ViewState } from './types';
-import { mockMetrics, mockProducts, mockUsers, mockDisputes } from './mockData';
-import { Bell, Search, UserCircle, LogIn, Lock, GraduationCap } from 'lucide-react';
+import { Bell, Search, GraduationCap, LogIn, Lock } from 'lucide-react';
+import { api } from './services/api';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,32 +19,34 @@ const App: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Mock Authentication Logic
-    setTimeout(() => {
-      if (email === 'admin@unimarket.edu' && password === 'admin') {
-        setIsAuthenticated(true);
-      } else {
-        setError('Invalid credentials. Try admin@unimarket.edu / admin');
-        setIsLoading(false);
-      }
-    }, 1000);
+    try {
+      const response = await api.login(email, password);
+      api.setToken(response.token); // Persist token
+      setIsAuthenticated(true);
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderView = () => {
     switch (currentView) {
       case 'DASHBOARD':
-        return <DashboardHome metrics={mockMetrics} />;
+        return <DashboardHome />;
       case 'LISTINGS':
-        return <ListingsView products={mockProducts} />;
+        return <ListingsView />;
       case 'USERS':
-        return <UsersView users={mockUsers} />;
+        return <UsersView />;
       case 'DISPUTES':
-        return <DisputesView disputes={mockDisputes} />;
+        return <DisputesView />;
+      case 'SETTINGS':
+        return <SettingsView />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-slate-400">

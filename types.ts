@@ -59,7 +59,7 @@ export interface DashboardMetrics {
   categoryDistribution: { name: string; value: number }[];
 }
 
-export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'DISPUTES';
+export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'DISPUTES' | 'SETTINGS';
 
 export interface DisputeMessage {
   id: string;

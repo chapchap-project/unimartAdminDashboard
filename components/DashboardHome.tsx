@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardMetrics } from '../types';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -6,23 +6,45 @@ import {
 } from 'recharts';
 import { Users, DollarSign, ShoppingBag, AlertTriangle, Sparkles, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { getDashboardInsights } from '../services/geminiService';
-
-interface DashboardHomeProps {
-  metrics: DashboardMetrics;
-}
+import { api } from '../services/api';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899'];
 
-const DashboardHome: React.FC<DashboardHomeProps> = ({ metrics }) => {
+const DashboardHome: React.FC = () => {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
   const [insight, setInsight] = useState<string | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
 
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const data = await api.getDashboardMetrics();
+        setMetrics(data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard metrics", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
   const generateInsight = async () => {
+    if (!metrics) return;
     setLoadingInsight(true);
     const result = await getDashboardInsights(metrics, "No major outages reported. User signups spiked on Tuesday.");
     setInsight(result);
     setLoadingInsight(false);
   };
+
+  if (loading || !metrics) {
+    return (
+        <div className="flex h-96 items-center justify-center">
+            <Loader2 className="animate-spin text-indigo-500" size={32} />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">

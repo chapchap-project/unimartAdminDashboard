@@ -1,23 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, UserStatus } from '../types';
-import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter } from 'lucide-react';
+import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
 
-interface UsersViewProps {
-  users: User[];
-}
-
-const UsersView: React.FC<UsersViewProps> = ({ users: initialUsers }) => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+const UsersView: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
 
-  const handleStatusChange = (userId: string, newStatus: UserStatus) => {
+  // Load users from API on mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await api.getUsers();
+        setUsers(data);
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleStatusChange = async (userId: string, newStatus: UserStatus) => {
+    // Optimistic UI Update
     setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
+    
+    try {
+        await api.updateUserStatus(userId, newStatus);
+    } catch (error) {
+        // Revert on failure
+        console.error("Failed to update status", error);
+        // You would ideally refetch or revert state here
+    }
   };
 
-  const handleDelete = (userId: string) => {
+  const handleDelete = async (userId: string) => {
     if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+        // Optimistic UI Update
         setUsers(users.filter(u => u.id !== userId));
+        try {
+            await api.deleteUser(userId);
+        } catch (error) {
+            console.error("Failed to delete user", error);
+        }
     }
   };
 
@@ -27,6 +55,10 @@ const UsersView: React.FC<UsersViewProps> = ({ users: initialUsers }) => {
                           user.email.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
+
+  if (loading) {
+      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+  }
 
   return (
     <div className="space-y-6 pb-10 animate-fade-in">

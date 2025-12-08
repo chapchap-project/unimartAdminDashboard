@@ -1,19 +1,37 @@
-import React, { useState } from 'react';
-import { Dispute, DisputeMessage } from '../types';
-import { AlertCircle, MessageSquare, Gavel, CheckCircle, XCircle, Search, Clock, FileText, Image as ImageIcon, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Dispute } from '../types';
+import { AlertCircle, MessageSquare, Gavel, CheckCircle, Search, Clock, FileText, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
 
-interface DisputesViewProps {
-  disputes: Dispute[];
-}
-
-const DisputesView: React.FC<DisputesViewProps> = ({ disputes: initialDisputes }) => {
-  const [disputes, setDisputes] = useState<Dispute[]>(initialDisputes);
+const DisputesView: React.FC = () => {
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [filter, setFilter] = useState<'ALL' | 'OPEN' | 'RESOLVED'>('ALL');
 
-  const handleResolve = (disputeId: string, outcome: 'RESOLVED_BUYER' | 'RESOLVED_SELLER') => {
+  useEffect(() => {
+    const fetchDisputes = async () => {
+      try {
+        const data = await api.getDisputes();
+        setDisputes(data);
+      } catch (e) {
+        console.error("Failed to load disputes", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDisputes();
+  }, []);
+
+  const handleResolve = async (disputeId: string, outcome: 'RESOLVED_BUYER' | 'RESOLVED_SELLER') => {
+    // Optimistic Update
     setDisputes(disputes.map(d => d.id === disputeId ? { ...d, status: outcome } : d));
     setSelectedDispute(null);
+    try {
+        await api.resolveDispute(disputeId, outcome);
+    } catch (e) {
+        console.error("Failed to resolve dispute", e);
+    }
   };
 
   const filteredDisputes = disputes.filter(d => {
@@ -21,6 +39,10 @@ const DisputesView: React.FC<DisputesViewProps> = ({ disputes: initialDisputes }
     if (filter === 'OPEN') return d.status === 'OPEN';
     return d.status !== 'OPEN';
   });
+
+  if (loading) {
+      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+  }
 
   return (
     <div className="space-y-6 pb-10 animate-fade-in relative">

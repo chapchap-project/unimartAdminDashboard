@@ -61,7 +61,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       </div>
 
       <div className="p-3 mb-4 space-y-1">
-        <button className="w-full flex items-center gap-3 px-3 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+        <button 
+          onClick={() => setView('SETTINGS')}
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'SETTINGS' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+        >
           <Settings size={20} />
           <span className="font-medium text-sm">Settings</span>
         </button>

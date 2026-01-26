@@ -2,12 +2,13 @@ import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, An
 import * as data from '../mockData';
 
 // Default URL for local Unimarket backend
-const DEFAULT_API_URL = 'http://localhost:5000';
+const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+const DEFAULT_USE_MOCK = (import.meta as any).env?.VITE_USE_MOCK === 'true';
 
 class ApiService {
   private token: string | null = null;
   private baseUrl: string = DEFAULT_API_URL;
-  private useMock: boolean = true;
+  private useMock: boolean = DEFAULT_USE_MOCK;
   private logs: AuditLog[] = [...data.mockAuditLogs];
   private alerts: PriorityAlert[] = [...data.mockPriorityAlerts];
 
@@ -59,8 +60,8 @@ class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> { // Changed options signature
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `${this.getToken()}`, // Simple token, or add Bearer if needed. Backend uses jwt.verify(token, ...)
-      ...(options?.headers || {}), // Adjusted to handle undefined options
+      'Authorization': `Bearer ${this.getToken()}`, // Correctly prefix with Bearer
+      ...(options?.headers || {}),
     };
 
     // Remove leading slash if present to avoid double slashes with base url
@@ -126,7 +127,8 @@ class ApiService {
 
       return {
         ...stats,
-        ...analytics
+        ...analytics,
+        deltas: stats.deltas || data.mockMetrics.deltas // Provide fallback for deltas
       };
     } catch (error) {
       console.warn('Failed to fetch dashboard metrics, falling back to mock.', error);
@@ -392,7 +394,7 @@ class ApiService {
   async getAnalytics(timeframe: Timeframe): Promise<AnalyticsData> {
     if (this.useMock) return data.mockAnalyticsData;
     try {
-      return await this.request<AnalyticsData>(`admin/analytics/detailed?timeframe=${timeframe}`);
+      return await this.request<AnalyticsData>(`admin/analytics?timeframe=${timeframe}`);
     } catch (error) {
       return data.mockAnalyticsData;
     }

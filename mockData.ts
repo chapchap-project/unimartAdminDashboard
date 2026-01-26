@@ -1,12 +1,12 @@
 import { User, Product, Transaction, DashboardMetrics, UserRole, ProductStatus, Report, AuditLog, Announcement, Category, AnalyticsData, PriorityAlert, FraudQueueItem } from './types';
 
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'Alex Johnson', universityEmail: 'alex.j@uni.edu', role: UserRole.USER, isVerified: true, riskScore: 12, reportCount: 0, activityCount: 154, listingCount: 12, transactionCount: 8, status: 'ACTIVE', createdAt: '2023-09-01T12:00:00Z', accountAgeDays: 145, pastRemovals: 0 },
-  { id: 'u2', name: 'Sarah Connor', universityEmail: 's.connor@tech.edu', role: UserRole.USER, isVerified: true, riskScore: 5, reportCount: 0, activityCount: 320, listingCount: 25, transactionCount: 18, status: 'ACTIVE', createdAt: '2023-09-15T12:00:00Z', accountAgeDays: 130, pastRemovals: 0 },
-  { id: 'u3', name: 'Mike Ross', universityEmail: 'mike.r@law.edu', role: UserRole.USER, isVerified: false, riskScore: 45, reportCount: 2, activityCount: 85, listingCount: 5, transactionCount: 2, status: 'WARNED', createdAt: '2023-10-02T12:00:00Z', accountAgeDays: 110, pastRemovals: 1 },
-  { id: 'u4', name: 'Jessica Pearson', universityEmail: 'j.pearson@uni.edu', role: UserRole.ADMIN, isVerified: true, riskScore: 2, reportCount: 0, activityCount: 2000, listingCount: 0, transactionCount: 50, status: 'ACTIVE', createdAt: '2023-08-20T12:00:00Z', accountAgeDays: 155, pastRemovals: 0 },
-  { id: 'u5', name: 'Louis Litt', universityEmail: 'l.litt@law.edu', role: UserRole.USER, isVerified: true, riskScore: 88, reportCount: 15, activityCount: 500, listingCount: 40, transactionCount: 35, status: 'RESTRICTED', createdAt: '2023-11-05T12:00:00Z', accountAgeDays: 80, pastRemovals: 4 },
-  { id: 'u6', name: 'Trevor Evans', universityEmail: 't.evans@uni.edu', role: UserRole.USER, isVerified: false, riskScore: 95, reportCount: 28, activityCount: 45, listingCount: 10, transactionCount: 1, status: 'SUSPENDED', createdAt: '2024-01-10T09:00:00Z', accountAgeDays: 12, pastRemovals: 8 },
+  { id: 'u1', name: 'Alex Johnson', universityEmail: 'alex.j@uni.edu', role: UserRole.USER, isVerified: true, riskScore: 12, reportCount: 0, activityCount: 154, listingCount: 12, transactionCount: 8, status: 'ACTIVE', createdAt: '2023-09-01T12:00:00Z', accountAgeDays: 145, pastRemovals: 0, credibilityScore: 85 },
+  { id: 'u2', name: 'Sarah Connor', universityEmail: 's.connor@tech.edu', role: UserRole.USER, isVerified: true, riskScore: 5, reportCount: 0, activityCount: 320, listingCount: 25, transactionCount: 18, status: 'ACTIVE', createdAt: '2023-09-15T12:00:00Z', accountAgeDays: 130, pastRemovals: 0, credibilityScore: 95 },
+  { id: 'u3', name: 'Mike Ross', universityEmail: 'mike.r@law.edu', role: UserRole.USER, isVerified: false, riskScore: 45, reportCount: 2, activityCount: 85, listingCount: 5, transactionCount: 2, status: 'WARNED', createdAt: '2023-10-02T12:00:00Z', accountAgeDays: 110, pastRemovals: 1, credibilityScore: 60 },
+  { id: 'u4', name: 'Jessica Pearson', universityEmail: 'j.pearson@uni.edu', role: UserRole.ADMIN, isVerified: true, riskScore: 2, reportCount: 0, activityCount: 2000, listingCount: 0, transactionCount: 50, status: 'ACTIVE', createdAt: '2023-08-20T12:00:00Z', accountAgeDays: 155, pastRemovals: 0, credibilityScore: 100 },
+  { id: 'u5', name: 'Louis Litt', universityEmail: 'l.litt@law.edu', role: UserRole.USER, isVerified: true, riskScore: 88, reportCount: 15, activityCount: 500, listingCount: 40, transactionCount: 35, status: 'RESTRICTED', createdAt: '2023-11-05T12:00:00Z', accountAgeDays: 80, pastRemovals: 4, credibilityScore: 40 },
+  { id: 'u6', name: 'Trevor Evans', universityEmail: 't.evans@uni.edu', role: UserRole.USER, isVerified: false, riskScore: 95, reportCount: 28, activityCount: 45, listingCount: 10, transactionCount: 1, status: 'SUSPENDED', createdAt: '2024-01-10T09:00:00Z', accountAgeDays: 12, pastRemovals: 8, credibilityScore: 10 },
 ];
 
 export const mockProducts: Product[] = [
@@ -25,8 +25,8 @@ export const mockProducts: Product[] = [
     riskScore: 0.5,
     flags: [],
     heuristics: [
-      { id: 'h1', label: 'Price vs Market', passed: true, severity: 'INFO' },
-      { id: 'h2', label: 'Account Age Check', passed: true, severity: 'INFO' }
+      { label: 'Price vs Market', passed: true, severity: 'INFO' },
+      { label: 'Account Age Check', passed: true, severity: 'INFO' }
     ],
     history: []
   },
@@ -45,9 +45,9 @@ export const mockProducts: Product[] = [
     riskScore: 8.5,
     flags: ['SCAM_LANGUAGE', 'UNDERPRICED'],
     heuristics: [
-      { id: 'h1', label: 'Price 60% below median', passed: false, severity: 'CRITICAL' },
-      { id: 'h2', label: 'New account (<24h)', passed: false, severity: 'WARNING' },
-      { id: 'h3', label: 'Scam language detected', passed: false, severity: 'CRITICAL' }
+      { label: 'Price 60% below median', passed: false, severity: 'CRITICAL' },
+      { label: 'New account (<24h)', passed: false, severity: 'WARNING' },
+      { label: 'Scam language detected', passed: false, severity: 'CRITICAL' }
     ],
     history: [
       { field: 'price', oldValue: '1200', newValue: '500', timestamp: new Date(Date.now() - 1000 * 3600 * 1).toISOString() }
@@ -68,8 +68,8 @@ export const mockProducts: Product[] = [
     riskScore: 7.2,
     flags: ['EXTERNAL_CONTACT'],
     heuristics: [
-      { id: 'h1', label: 'External contact detected', passed: false, severity: 'CRITICAL' },
-      { id: 'h2', label: 'Image reuse (hash match)', passed: false, severity: 'WARNING' }
+      { label: 'External contact detected', passed: false, severity: 'CRITICAL' },
+      { label: 'Image reuse (hash match)', passed: false, severity: 'WARNING' }
     ],
     history: []
   }
@@ -96,7 +96,7 @@ export const mockReports: Report[] = [
     status: 'PENDING',
     type: 'LISTING',
     createdAt: '2023-10-26T12:00:00Z',
-    reporter: { name: 'Sarah Connor', universityEmail: 's.connor@tech.edu' },
+    reporter: { name: 'Sarah Connor', universityEmail: 's.connor@tech.edu', credibilityScore: 95 },
     listing: { title: 'HP Pavilion Laptop 15"', id: 'p101' },
     reportedUser: { name: 'Louis Litt', id: 'u5' }
   },
@@ -107,7 +107,7 @@ export const mockReports: Report[] = [
     status: 'PENDING',
     type: 'USER',
     createdAt: '2023-10-28T12:00:00Z',
-    reporter: { name: 'Mike Ross', universityEmail: 'mike.r@law.edu' },
+    reporter: { name: 'Mike Ross', universityEmail: 'mike.r@law.edu', credibilityScore: 60 },
     reportedUser: { name: 'Alex Johnson', id: 'u1' }
   }
 ];

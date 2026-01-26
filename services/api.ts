@@ -1,19 +1,21 @@
-import { DashboardMetrics, Product, User, Dispute, UserStatus, ProductStatus, UserRole, Transaction, AuditLog, Announcement } from '../types';
-import { mockUsers, mockProducts, mockDisputes, mockMetrics, mockTransactions, mockAuditLogs, mockAnnouncements } from '../mockData';
+import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem } from '../types';
+import * as data from '../mockData';
 
-// Default URL from user prompt
-const DEFAULT_API_URL = 'https://hstrvyypbv.apidog.io/api';
+// Default URL for local Unimarket backend
+const DEFAULT_API_URL = 'http://localhost:5000';
 
 class ApiService {
   private token: string | null = null;
   private baseUrl: string = DEFAULT_API_URL;
-  private useMock: boolean = false;
+  private useMock: boolean = true;
+  private logs: AuditLog[] = [...data.mockAuditLogs];
+  private alerts: PriorityAlert[] = [...data.mockPriorityAlerts];
 
   constructor() {
     // Load config from localStorage if available
     const storedUrl = localStorage.getItem('api_base_url');
     const storedMock = localStorage.getItem('api_use_mock');
-    
+
     if (storedUrl) this.baseUrl = storedUrl;
     if (storedMock) this.useMock = storedMock === 'true';
   }
@@ -47,35 +49,34 @@ class ApiService {
 
   async testConnection(): Promise<boolean> {
     try {
-      // Just a health check ping, assuming /health or root exists, 
-      // otherwise we try a lightweight endpoint like /admin/dashboard/metrics
-      await this.request('/admin/dashboard/metrics', { method: 'GET' });
+      await this.request('/admin/dashboard', { method: 'GET' });
       return true;
     } catch (e) {
       return false;
     }
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    if (this.useMock) {
-      throw new Error('Mock Mode Enabled'); 
-    }
-
+  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> { // Changed options signature
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.getToken()}`,
-      ...options.headers,
+      'Authorization': `${this.getToken()}`, // Simple token, or add Bearer if needed. Backend uses jwt.verify(token, ...)
+      ...(options?.headers || {}), // Adjusted to handle undefined options
     };
 
     // Remove leading slash if present to avoid double slashes with base url
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     const cleanBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
       const response = await fetch(`${cleanBase}${cleanEndpoint}`, {
         ...options,
         headers,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -89,180 +90,311 @@ class ApiService {
   }
 
   // --- Auth ---
-  async login(email: string, password: string): Promise<{ user: User; token: string }> {
-    try {
-        return await this.request('/auth/admin/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-    } catch (e) {
-        // Fallback or if Mock Mode is on
-        if (this.useMock || (email === 'admin@unimarket.edu' && password === 'admin')) {
-            return {
-                user: mockUsers.find(u => u.role === 'ADMIN') || mockUsers[0],
-                token: 'mock-jwt-token-12345'
-            };
-        }
-        throw e;
+  async login(universityEmail: string, password: string): Promise<{ user: User; token: string }> {
+    if (this.useMock) {
+      return this.mockLogin(universityEmail, password);
     }
+
+    try {
+      return await this.request('auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ universityEmail, password })
+      });
+    } catch (error) {
+      console.warn('Backend login failed, falling back to mock data.', error);
+      return this.mockLogin(universityEmail, password);
+    }
+  }
+
+  private mockLogin(email: string, _pass: string): { user: User; token: string } {
+    const { mockUsers } = data; // We'll need to import this or just use a default
+    const user = mockUsers.find(u => u.universityEmail === email) || mockUsers[3]; // Default to Jessica Pearson (Admin)
+    return {
+      user,
+      token: 'mock-jwt-token-for-testing'
+    };
   }
 
   // --- Dashboard ---
   async getDashboardMetrics(): Promise<DashboardMetrics> {
+    if (this.useMock) return data.mockMetrics;
     try {
-      return await this.request<DashboardMetrics>('admin/dashboard/metrics');
-    } catch (e) {
-      return mockMetrics;
+      const [stats, analytics] = await Promise.all([
+        this.request<any>('admin/dashboard'),
+        this.request<any>('admin/analytics')
+      ]);
+
+      return {
+        ...stats,
+        ...analytics
+      };
+    } catch (error) {
+      console.warn('Failed to fetch dashboard metrics, falling back to mock.', error);
+      return data.mockMetrics;
+    }
+  }
+
+  async getPriorityAlerts(): Promise<PriorityAlert[]> {
+    if (this.useMock) {
+      return this.alerts
+        .filter(a => a.status === 'ACTIVE' || a.status === 'ESCALATED')
+        .sort((a, b) => {
+          if (a.status === 'ESCALATED' && b.status !== 'ESCALATED') return -1;
+          if (b.status === 'ESCALATED' && a.status !== 'ESCALATED') return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+    }
+    try {
+      return await this.request<PriorityAlert[]>('admin/alerts');
+    } catch (error) {
+      return this.alerts.filter(a => a.status === 'ACTIVE');
+    }
+  }
+
+  async updateAlertStatus(id: string, status: PriorityAlert['status'], snoozedUntil?: string): Promise<void> {
+    if (this.useMock) {
+      const alert = this.alerts.find(a => a.id === id);
+      if (alert) {
+        alert.status = status;
+        if (snoozedUntil) alert.snoozedUntil = snoozedUntil;
+      }
+      return;
+    }
+
+    await this.request(`admin/alerts/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, snoozedUntil })
+    });
+  }
+
+  // Hook for socket simulation
+  public pushNewAlert(alert: PriorityAlert) {
+    this.alerts.unshift(alert);
+  }
+
+  async getFraudQueue(): Promise<FraudQueueItem[]> {
+    if (this.useMock) return data.mockFraudQueue;
+    try {
+      return await this.request<FraudQueueItem[]>('admin/fraud-queue');
+    } catch (error) {
+      return data.mockFraudQueue;
     }
   }
 
   // --- Users ---
   async getUsers(): Promise<User[]> {
+    if (this.useMock) return data.mockUsers;
     try {
       return await this.request<User[]>('admin/users');
-    } catch (e) {
-      return mockUsers;
+    } catch (error) {
+      return data.mockUsers;
     }
   }
 
-  async updateUserStatus(userId: string, status: UserStatus, reason?: string): Promise<void> {
-    try {
-        await this.request(`admin/users/${userId}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status, reason })
-        });
-    } catch (e) {
-        console.log(`[Mock] Updated user ${userId} status to ${status} reason: ${reason}`);
-    }
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    await this.request(`admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    });
   }
 
   async deleteUser(userId: string): Promise<void> {
-    try {
-        await this.request(`admin/users/${userId}`, { method: 'DELETE' });
-    } catch (e) {
-        console.log(`[Mock] Deleted user ${userId}`);
-    }
-  }
-
-  async createAdmin(data: { name: string; email: string; university: string }): Promise<User> {
-    try {
-      return await this.request<User>('admin/users/admin', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
-    } catch (e) {
-      // Mock creation
-      const newAdmin: User = {
-        id: `u${Date.now()}`,
-        name: data.name,
-        email: data.email,
-        university: data.university,
-        role: UserRole.ADMIN,
-        status: UserStatus.VERIFIED,
-        joinDate: new Date().toISOString().split('T')[0],
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=6366f1&color=fff`
-      };
-      // We don't modify mockUsers array directly here as we aren't maintaining global mock state 
-      // but returning it allows the UI to update optimistically
-      return newAdmin;
-    }
+    await this.request(`admin/users/${userId}`, { method: 'DELETE' });
   }
 
   // --- Listings ---
   async getProducts(): Promise<Product[]> {
+    if (this.useMock) return data.mockProducts;
     try {
-        return await this.request<Product[]>('admin/listings');
-    } catch (e) {
-        return mockProducts;
+      return await this.request<Product[]>('admin/listings');
+    } catch (error) {
+      return data.mockProducts;
     }
   }
 
-  async updateProductStatus(productId: string, status: ProductStatus): Promise<void> {
+  async updateProductStatus(productId: string, status: ProductStatus, reason?: string, note?: string): Promise<void> {
+    const product = data.mockProducts.find(p => p.id === productId);
+    const previousState = product?.status;
+
+    if (this.useMock) {
+      if (product) {
+        product.status = status;
+
+        // --- Seller Risk Escalation (Automated Consequences) ---
+        const seller = data.mockUsers.find(u => u.id === product.seller.id);
+        if (seller) {
+          if (status === ProductStatus.REMOVED) {
+            seller.riskScore = Math.min(100, (seller.riskScore || 0) + 3);
+            seller.pastRemovals = (seller.pastRemovals || 0) + 1;
+          } else if (status === ProductStatus.FLAGGED) {
+            seller.riskScore = Math.min(100, (seller.riskScore || 0) + 2);
+          } else if (status === ProductStatus.HIDDEN) {
+            seller.riskScore = Math.min(100, (seller.riskScore || 0) + 1);
+          }
+
+          // Auto-Suspension Rule
+          if (seller.pastRemovals >= 3 && seller.accountAgeDays < 14) {
+            seller.status = 'SUSPENDED';
+            this.createAuditLog('AUTO_SUSPEND_USER', seller.id, 'Account auto-suspended: 3+ removals on new account (<14d).', 'ACTIVE', 'SUSPENDED', 'FRAUD_PREVENTION');
+          }
+        }
+
+        this.createAuditLog(
+          'UPDATE_LISTING_STATUS',
+          productId,
+          note || `Status updated from ${previousState} to ${status}`,
+          previousState,
+          status,
+          reason
+        );
+      }
+      return;
+    }
+
+    await this.request(`admin/listings/${productId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, reason, note, previousState })
+    });
+  }
+
+  // --- Reports ---
+  async getReports(): Promise<Report[]> {
+    if (this.useMock) return data.mockReports;
     try {
-        await this.request(`admin/listings/${productId}/status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status })
-        });
-    } catch (e) {
-        console.log(`[Mock] Updated product ${productId} status to ${status}`);
+      return await this.request<Report[]>('admin/reports');
+    } catch (error) {
+      return data.mockReports;
     }
   }
 
-  async deleteProduct(productId: string): Promise<void> {
-    try {
-        await this.request(`admin/listings/${productId}`, { method: 'DELETE' });
-    } catch (e) {
-        console.log(`[Mock] Deleted product ${productId}`);
-    }
-  }
-
-  // --- Disputes ---
-  async getDisputes(): Promise<Dispute[]> {
-    try {
-        return await this.request<Dispute[]>('admin/disputes');
-    } catch (e) {
-        return mockDisputes;
-    }
-  }
-
-  async resolveDispute(disputeId: string, resolution: 'RESOLVED_BUYER' | 'RESOLVED_SELLER'): Promise<void> {
-     try {
-        await this.request(`admin/disputes/${disputeId}/resolve`, {
-            method: 'POST',
-            body: JSON.stringify({ resolution })
-        });
-     } catch (e) {
-         console.log(`[Mock] Resolved dispute ${disputeId} as ${resolution}`);
-     }
+  async updateReportStatus(reportId: string, status: string): Promise<void> {
+    await this.request(`admin/reports/${reportId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
   }
 
   // --- Transactions ---
   async getTransactions(): Promise<Transaction[]> {
+    if (this.useMock) return data.mockTransactions;
     try {
-        return await this.request<Transaction[]>('admin/transactions');
-    } catch (e) {
-        return mockTransactions;
+      return await this.request<Transaction[]>('admin/payments');
+    } catch (error) {
+      return data.mockTransactions;
     }
+  }
+
+  // --- Notifications/Announcements ---
+  async getAnnouncements(): Promise<Announcement[]> {
+    if (this.useMock) return data.mockAnnouncements;
+    try {
+      return await this.request<Announcement[]>('admin/announcements');
+    } catch (error) {
+      return data.mockAnnouncements;
+    }
+  }
+
+  async createAnnouncement(announcement: any): Promise<Announcement> {
+    if (this.useMock) {
+      const newAnn = {
+        ...announcement,
+        id: `a${Date.now()}`,
+        status: 'ACTIVE',
+        postedAt: new Date().toISOString().split('T')[0],
+        views: 0,
+        author: 'Jessica Pearson'
+      };
+      // In a real mock we might push to the list, but for now just return it
+      return newAnn as Announcement;
+    }
+
+    try {
+      return await this.request<Announcement>('admin/announcements', {
+        method: 'POST',
+        body: JSON.stringify(announcement)
+      });
+    } catch (error) {
+      // Fallback for creation is tricky, but let's return a mock object
+      return {
+        ...announcement,
+        id: `a${Date.now()}`,
+        status: 'ACTIVE',
+        postedAt: new Date().toISOString().split('T')[0],
+        views: 0,
+        author: 'Jessica Pearson'
+      } as Announcement;
+    }
+  }
+
+  async broadcastNotification(message: string): Promise<void> {
+    await this.request('admin/notifications/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
   }
 
   // --- Audit Logs ---
   async getAuditLogs(): Promise<AuditLog[]> {
+    if (this.useMock) return this.logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     try {
-        return await this.request<AuditLog[]>('admin/audit-logs');
-    } catch (e) {
-        return mockAuditLogs;
+      return await this.request<AuditLog[]>('admin/audit-logs');
+    } catch (error) {
+      return this.logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
   }
 
-  // --- Announcements ---
-  async getAnnouncements(): Promise<Announcement[]> {
-    try {
-        return await this.request<Announcement[]>('admin/announcements');
-    } catch (e) {
-        return mockAnnouncements;
-    }
-  }
+  async createAuditLog(
+    action: string,
+    targetId: string,
+    note: string,
+    previousState?: string,
+    newState?: string,
+    reason?: string
+  ): Promise<void> {
+    const newLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      action,
+      targetId,
+      note,
+      previousState,
+      newState,
+      reason,
+      adminName: 'Jessica Pearson', // Mock current admin
+      adminId: 'u4',
+      createdAt: new Date().toISOString()
+    };
 
-  async createAnnouncement(data: Partial<Announcement>): Promise<Announcement> {
-    try {
-        return await this.request<Announcement>('admin/announcements', {
-            method: 'POST',
-            body: JSON.stringify(data)
+    this.logs.unshift(newLog);
+
+    if (!this.useMock) {
+      try {
+        await this.request('admin/audit-logs', {
+          method: 'POST',
+          body: JSON.stringify({ action, targetId, note, previousState, newState, reason })
         });
-    } catch (e) {
-        const newAnnouncement: Announcement = {
-            id: `a${Date.now()}`,
-            title: data.title || 'No Title',
-            message: data.message || '',
-            targetAudience: data.targetAudience as any || 'ALL',
-            priority: data.priority as any || 'INFO',
-            status: 'ACTIVE',
-            postedAt: new Date().toISOString().split('T')[0],
-            expiresAt: data.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            views: 0,
-            author: 'Current Admin'
-        };
-        return newAnnouncement;
+      } catch (error) {
+        console.error("Failed to sync audit log to backend", error);
+      }
+    }
+  }
+
+  // --- System Health ---
+  async getSystemHealth(): Promise<SystemHealth> {
+    if (this.useMock) return data.mockSystemHealth;
+    try {
+      return await this.request<SystemHealth>('admin/health');
+    } catch (error) {
+      return data.mockSystemHealth;
+    }
+  }
+
+  // --- Analytics ---
+  async getAnalytics(timeframe: Timeframe): Promise<AnalyticsData> {
+    if (this.useMock) return data.mockAnalyticsData;
+    try {
+      return await this.request<AnalyticsData>(`admin/analytics/detailed?timeframe=${timeframe}`);
+    } catch (error) {
+      return data.mockAnalyticsData;
     }
   }
 }

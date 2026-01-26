@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { DashboardMetrics, Product, User } from "../types";
 
-const apiKey = process.env.API_KEY || ''; // In a real app, ensure this is set safely
+const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
 export const getDashboardInsights = async (
@@ -16,12 +16,11 @@ export const getDashboardInsights = async (
     Highlight any anomalies, positive trends, or areas needing attention (like disputes).
 
     Metrics:
-    - Total Users: ${metrics.totalUsers}
+    - Total Users: ${metrics.users}
     - Active Listings: ${metrics.activeListings}
-    - Total Revenue: $${metrics.totalRevenue}
-    - Pending Disputes: ${metrics.pendingDisputes}
-    - Weekly Revenue Trend: ${JSON.stringify(metrics.revenueData)}
-    - Category Distribution: ${JSON.stringify(metrics.categoryDistribution)}
+    - Total Revenue: KSH ${metrics.totalRevenue}
+    - Weekly Revenue Trend: ${JSON.stringify(metrics.revenueByDay)}
+    - Category Shares: ${JSON.stringify(metrics.categoryShares)}
 
     Recent Context: ${recentIncidents}
 
@@ -41,9 +40,9 @@ export const getDashboardInsights = async (
 };
 
 export const analyzeListingForSafety = async (product: Product): Promise<{ safe: boolean; reason: string }> => {
-    if (!apiKey) return { safe: true, reason: "AI service unavailable" };
+  if (!apiKey) return { safe: true, reason: "AI service unavailable" };
 
-    const prompt = `
+  const prompt = `
       Analyze this product listing for a university marketplace. Is it appropriate and safe?
       Title: ${product.title}
       Category: ${product.category}
@@ -53,18 +52,18 @@ export const analyzeListingForSafety = async (product: Product): Promise<{ safe:
       Strictly output JSON.
     `;
 
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json"
-            }
-        });
-        
-        const text = response.text || "{}";
-        return JSON.parse(text);
-    } catch (e) {
-        return { safe: true, reason: "AI Analysis Failed" };
-    }
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const text = response.text || "{}";
+    return JSON.parse(text);
+  } catch (e) {
+    return { safe: true, reason: "AI Analysis Failed" };
+  }
 }

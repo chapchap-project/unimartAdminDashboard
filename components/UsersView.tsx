@@ -1,382 +1,536 @@
 import React, { useState, useEffect } from 'react';
-import { User, UserStatus } from '../types';
-import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter, Loader2, UserPlus, X, AlertTriangle } from 'lucide-react';
+import { User, UserRole } from '../types';
+import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter, Loader2, UserPlus, X, AlertTriangle, Users, ShoppingBag, CreditCard } from 'lucide-react';
 import { api } from '../services/api';
+import { useToast } from './Toast';
 
 const UsersView: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
-  const [search, setSearch] = useState('');
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('ALL');
+    const [search, setSearch] = useState('');
+    const [sortBy, setSortBy] = useState<'risk' | 'reports' | 'activity' | 'newest'>('newest');
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const { success, error, toast } = useToast();
 
-  // Ban Modal State
-  const [isBanModalOpen, setIsBanModalOpen] = useState(false);
-  const [userToBan, setUserToBan] = useState<User | null>(null);
-  const [banReason, setBanReason] = useState('');
+    // Add Admin Modal State
+    const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+    const [creatingAdmin, setCreatingAdmin] = useState(false);
+    const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
 
-  // Add Admin Modal State
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', university: '' });
-  const [creatingAdmin, setCreatingAdmin] = useState(false);
+    // Load users from API on mount
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const data = await api.getUsers();
+                setUsers(data);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
 
-  // Load users from API on mount
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const data = await api.getUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
-
-  const handleStatusChange = async (userId: string, newStatus: UserStatus) => {
-    // If banning, divert to modal flow
-    if (newStatus === UserStatus.BANNED) {
-        const user = users.find(u => u.id === userId);
-        if (user) {
-            setUserToBan(user);
-            setBanReason('');
-            setIsBanModalOpen(true);
-        }
-        return;
-    }
-
-    // Otherwise proceed with standard update (e.g., Unban)
-    // Optimistic UI Update
-    setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-    
-    try {
-        await api.updateUserStatus(userId, newStatus);
-    } catch (error) {
-        // Revert on failure
-        console.error("Failed to update status", error);
-        // You would ideally refetch or revert state here
-    }
-  };
-
-  const confirmBan = async () => {
-    if (!userToBan) return;
-    if (!banReason.trim()) {
-        alert("Please provide a reason for the ban.");
-        return;
-    }
-
-    // Optimistic Update
-    setUsers(users.map(u => u.id === userToBan.id ? { ...u, status: UserStatus.BANNED } : u));
-    setIsBanModalOpen(false);
-
-    try {
-        await api.updateUserStatus(userToBan.id, UserStatus.BANNED, banReason);
-    } catch (error) {
-        console.error("Failed to ban user", error);
-    }
-  };
-
-  const handleCreateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if(!newAdmin.name || !newAdmin.email || !newAdmin.university) return;
-
-    setCreatingAdmin(true);
-    try {
-        const createdUser = await api.createAdmin(newAdmin);
-        setUsers([createdUser, ...users]);
-        setIsAdminModalOpen(false);
-        setNewAdmin({ name: '', email: '', university: '' });
-    } catch (e) {
-        console.error("Failed to create admin", e);
-        alert("Failed to create administrator. Please check the logs.");
-    } finally {
-        setCreatingAdmin(false);
-    }
-  };
-
-  const handleDelete = async (userId: string) => {
-    if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+    const handleRoleChange = async (userId: string, newRole: UserRole) => {
         // Optimistic UI Update
-        setUsers(users.filter(u => u.id !== userId));
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+
         try {
-            await api.deleteUser(userId);
+            await api.updateUserRole(userId, newRole);
         } catch (error) {
-            console.error("Failed to delete user", error);
+            console.error("Failed to update role", error);
         }
+    };
+
+    const handleDelete = async (userId: string) => {
+        if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
+            // Optimistic UI Update
+            setUsers(users.filter(u => u.id !== userId));
+            try {
+                await api.deleteUser(userId);
+            } catch (error) {
+                console.error("Failed to delete user", error);
+            }
+        }
+    };
+
+    const getSortedUsers = () => {
+        let result = [...users];
+
+        // Filter
+        if (filter !== 'ALL') {
+            result = result.filter(u => u.role === filter);
+        }
+
+        // Search
+        if (search) {
+            const s = search.toLowerCase();
+            result = result.filter(u => u.name.toLowerCase().includes(s) || u.universityEmail.toLowerCase().includes(s));
+        }
+
+        // Sort
+        return result.sort((a, b) => {
+            switch (sortBy) {
+                case 'risk': return b.riskScore - a.riskScore;
+                case 'reports': return b.reportCount - a.reportCount;
+                case 'activity': return b.activityCount - a.activityCount;
+                default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+        });
+    };
+
+    const sortedUsers = getSortedUsers();
+
+    if (loading) {
+        return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
     }
-  };
 
-  const filteredUsers = users.filter(user => {
-    const matchesFilter = filter === 'ALL' || user.status === filter;
-    const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) || 
-                          user.email.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+    return (
+        <div className="space-y-6 pb-10 animate-fade-in relative">
+            {/* Header Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">User Management</h2>
+                    <p className="text-slate-500 mt-1">Manage {users.length} registered students.</p>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsAdminModalOpen(true)}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 font-medium text-sm flex items-center gap-2"
+                    >
+                        <UserPlus size={16} />
+                        Add Administrator
+                    </button>
+                </div>
+            </div>
 
-  if (loading) {
-      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
-  }
+            {/* Filter & Sort Bar */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-center">
+                <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+                    {['ALL', 'USER', 'ADMIN'].map((role) => (
+                        <button
+                            key={role}
+                            onClick={() => setFilter(role)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${filter === role
+                                ? 'bg-slate-800 text-white shadow-md'
+                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                        >
+                            {role}
+                        </button>
+                    ))}
+                    <div className="w-px h-6 bg-slate-200 mx-2 hidden md:block"></div>
+                    <div className="flex gap-2">
+                        {(['risk', 'reports', 'activity', 'newest'] as const).map((s) => (
+                            <button
+                                key={s}
+                                onClick={() => setSortBy(s)}
+                                className={`px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-wider font-extrabold transition-all border ${sortBy === s
+                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm'
+                                    : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
+                                    }`}
+                            >
+                                Sort: {s}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="relative w-full xl:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border-slate-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                </div>
+            </div>
 
-  return (
-    <div className="space-y-6 pb-10 animate-fade-in relative">
-      {/* Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">User Management</h2>
-          <p className="text-slate-500 mt-1">Manage {users.length} registered students across {new Set(users.map(u => u.university)).size} universities.</p>
-        </div>
-        <div className="flex gap-2">
-            <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 font-medium text-sm flex items-center gap-2">
-                <Filter size={16} />
-                Export CSV
-            </button>
-            <button 
-                onClick={() => setIsAdminModalOpen(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 font-medium text-sm flex items-center gap-2"
-            >
-                <UserPlus size={16} />
-                Add Administrator
-            </button>
-        </div>
-      </div>
+            {/* Users Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                    <thead className="bg-slate-50/50 border-b border-slate-200">
+                        <tr>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student Profile</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trust Score</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Activity</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {sortedUsers.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                                    No users found matching your filters.
+                                </td>
+                            </tr>
+                        ) : (
+                            sortedUsers.map((user) => (
+                                <tr
+                                    key={user.id}
+                                    onClick={() => setSelectedUser(user)}
+                                    className="hover:bg-slate-50/80 transition-all group cursor-pointer"
+                                >
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <img
+                                                    src={user.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                                                    alt={user.name}
+                                                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                                />
+                                                {user.isVerified && (
+                                                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                                                        <CheckCircle size={12} className="text-emerald-500" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800 text-sm">{user.name}</div>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{user.universityEmail}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 max-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all duration-1000 ${user.riskScore > 70 ? 'bg-rose-500' : user.riskScore > 30 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                        }`}
+                                                    style={{ width: `${user.riskScore}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className={`text-xs font-extrabold ${user.riskScore > 70 ? 'text-rose-600' : user.riskScore > 30 ? 'text-amber-600' : 'text-emerald-600'
+                                                }`}>
+                                                {user.riskScore}% Risk
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-center gap-3">
+                                            <div className="text-center" title="Listings">
+                                                <p className="text-xs font-bold text-slate-700">{user.listingCount}</p>
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase">List</p>
+                                            </div>
+                                            <div className="text-center" title="Transactions">
+                                                <p className="text-xs font-bold text-slate-700">{user.transactionCount}</p>
+                                                <p className="text-[8px] font-bold text-slate-400 uppercase">Txn</p>
+                                            </div>
+                                            {user.reportCount > 0 && (
+                                                <div className="text-center" title="Reports">
+                                                    <p className="text-xs font-bold text-rose-600">{user.reportCount}</p>
+                                                    <p className="text-[8px] font-bold text-rose-400 uppercase tracking-tighter">Flags</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${user.status === 'SUSPENDED' ? 'bg-rose-50 text-rose-700 border-rose-100' :
+                                            user.status === 'RESTRICTED' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                user.status === 'WARNED' ? 'bg-orange-50 text-orange-700 border-orange-100' :
+                                                    'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                            }`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${user.status === 'SUSPENDED' ? 'bg-rose-500' :
+                                                user.status === 'RESTRICTED' ? 'bg-amber-500' :
+                                                    user.status === 'WARNED' ? 'bg-orange-500' : 'bg-emerald-500'
+                                                }`}></div>
+                                            {user.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors">
+                                            <MoreVertical size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            )))}
+                    </tbody>
+                </table>
+            </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-            {['ALL', 'VERIFIED', 'PENDING', 'BANNED'].map((status) => (
-                <button
-                    key={status}
-                    onClick={() => setFilter(status)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                        filter === status 
-                        ? 'bg-slate-800 text-white shadow-md' 
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                    }`}
-                >
-                    {status}
-                </button>
-            ))}
-        </div>
-        <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-                type="text" 
-                placeholder="Search students..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border-slate-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            />
-        </div>
-      </div>
+            {/* User Profile Overlay */}
+            {selectedUser && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}>
+                    <div
+                        className="w-full max-w-xl bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="font-bold text-slate-800 text-lg">User Intelligence Profile</h3>
+                            <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                                <X size={20} />
+                            </button>
+                        </div>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50/50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student Profile</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Institution</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-                {filteredUsers.length === 0 ? (
-                    <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                            No users found matching your filters.
-                        </td>
-                    </tr>
-                ) : (
-                filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                        <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
+                        <div className="flex-1 overflow-y-auto p-8 space-y-10">
+                            {/* Trust Summary Area */}
+                            <div className="flex items-start gap-6">
                                 <div className="relative">
-                                    <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
-                                    <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-white ${user.status === 'BANNED' ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                                    <img
+                                        src={selectedUser.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.name)}&size=128&background=random`}
+                                        className="w-24 h-24 rounded-2xl object-cover ring-4 ring-slate-50 shadow-lg"
+                                        alt=""
+                                    />
+                                    <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs shadow-xl ring-2 ring-white ${selectedUser.riskScore > 70 ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'
+                                        }`}>
+                                        {selectedUser.riskScore}
+                                    </div>
                                 </div>
+                                <div className="flex-1 pt-2">
+                                    <h4 className="text-2xl font-extrabold text-slate-900 tracking-tight">{selectedUser.name}</h4>
+                                    <p className="text-slate-500 font-medium flex items-center gap-1.5 mt-1 text-sm">
+                                        <Mail size={14} /> {selectedUser.universityEmail}
+                                    </p>
+                                    <div className="flex items-center gap-3 mt-4">
+                                        <div className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border border-indigo-100">
+                                            {selectedUser.role}
+                                        </div>
+                                        {selectedUser.isVerified && (
+                                            <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border border-emerald-100 flex items-center gap-1">
+                                                <CheckCircle size={10} /> Account Verified
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Trust Stats Row */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Risk Rating</p>
+                                    <p className={`text-xl font-black ${selectedUser.riskScore > 70 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                        {selectedUser.riskScore > 70 ? 'CRITICAL' : selectedUser.riskScore > 30 ? 'MEDIUM' : 'SECURE'}
+                                    </p>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Age</p>
+                                    <p className="text-xl font-black text-slate-800">
+                                        {Math.floor((Date.now() - new Date(selectedUser.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365)) || 1} yr
+                                    </p>
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Integrity</p>
+                                    <p className="text-xl font-black text-slate-800">{100 - selectedUser.reportCount * 2}%</p>
+                                </div>
+                            </div>
+
+                            {/* Activity Section */}
+                            <div className="space-y-4 pt-4">
+                                <h5 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
+                                    Activity Intelligence
+                                    <div className="flex-1 h-px bg-slate-100"></div>
+                                </h5>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                            <ShoppingBag size={22} />
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-black text-slate-800">{selectedUser.listingCount}</p>
+                                            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Live Listings</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                                            <CreditCard size={22} />
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-black text-slate-800">{selectedUser.transactionCount}</p>
+                                            <p className="text-[10px] font-extrabold text-slate-400 uppercase">Transactions</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={`p-5 rounded-2xl border transition-all ${selectedUser.reportCount > 5 ? 'bg-rose-50 border-rose-100' : 'bg-white border-slate-100'
+                                    } flex items-center justify-between`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedUser.reportCount > 5 ? 'bg-rose-100 text-rose-600' : 'bg-slate-50 text-slate-400'
+                                            }`}>
+                                            <AlertTriangle size={22} />
+                                        </div>
+                                        <div>
+                                            <p className={`text-2xl font-black ${selectedUser.reportCount > 5 ? 'text-rose-700' : 'text-slate-800'}`}>
+                                                {selectedUser.reportCount}
+                                            </p>
+                                            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Moderation Flags</p>
+                                        </div>
+                                    </div>
+                                    <button className="text-xs font-bold text-indigo-600 hover:underline">View History</button>
+                                </div>
+                            </div>
+
+                            {/* Moderation Actions Terminal */}
+                            <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full"></div>
+                                <h5 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6">Moderation Terminal</h5>
+
+                                <div className="space-y-4">
+                                    <button
+                                        onClick={() => {
+                                            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'WARNED' } : u));
+                                            setSelectedUser({ ...selectedUser, status: 'WARNED' });
+                                            api.createAuditLog('WARN_USER', selectedUser.id, `Issued official warning notification for community guidelines violation.`);
+                                            success('User Warned', `An official warning has been sent to ${selectedUser.name}.`);
+                                        }}
+                                        className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 text-left">
+                                            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500">
+                                                <AlertTriangle size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">Issue Official Warning</p>
+                                                <p className="text-[10px] text-slate-400">Sends high-priority mail notification</p>
+                                            </div>
+                                        </div>
+                                        <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'RESTRICTED' } : u));
+                                            setSelectedUser({ ...selectedUser, status: 'RESTRICTED' });
+                                            api.createAuditLog('RESTRICT_USER', selectedUser.id, `Revoked marketplace privileges due to suspicious activity detected.`);
+                                            toast('Access Restricted', `${selectedUser.name}'s marketplace privileges have been limited.`, 'warning');
+                                        }}
+                                        className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 text-left">
+                                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500">
+                                                <ShieldAlert size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold">Restrict Marketplace Privileges</p>
+                                                <p className="text-[10px] text-slate-400">Blocks new listings and messages</p>
+                                            </div>
+                                        </div>
+                                        <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowSuspendConfirm(true)}
+                                        className="w-full flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 text-left">
+                                            <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
+                                                <Ban size={16} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-rose-400">Full Account Suspension</p>
+                                                <p className="text-[10px] text-rose-500/60 font-medium">Revokes all access immediately</p>
+                                            </div>
+                                        </div>
+                                        <X size={14} className="text-rose-900 rotate-45 group-hover:text-white transition-all" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <button
+                                onClick={() => handleDelete(selectedUser.id)}
+                                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5"
+                            >
+                                <Trash2 size={14} /> Purge Identity Data
+                            </button>
+                            <button
+                                onClick={() => setSelectedUser(null)}
+                                className="px-6 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold shadow-lg shadow-slate-300 hover:bg-slate-800 transition-all"
+                            >
+                                Close Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Admin Modal */}
+            {isAdminModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-100">
+                            <h3 className="text-lg font-bold text-slate-800">Add New Administrator</h3>
+                            <button onClick={() => setIsAdminModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={() => {/* Logic to promote existing user or invite */ }}>
+                            <div className="p-6 space-y-4">
+                                <p className="text-sm text-slate-600">
+                                    Search for an existing user to promote them to an administrator role.
+                                </p>
                                 <div>
-                                    <div className="font-bold text-slate-800 text-sm">{user.name}</div>
-                                    <div className="text-xs text-slate-400 font-medium">Joined {user.joinDate}</div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">User Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                        placeholder="jane.doe@egerton.ac.ke"
+                                    />
+                                </div>
+
+                                <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3 mt-2">
+                                    <ShieldCheck className="text-indigo-600 flex-shrink-0 mt-0.5" size={16} />
+                                    <p className="text-xs text-indigo-800 leading-relaxed">
+                                        Promoting a user to administrator gives them full access to all dashboard modules including User Management and Listings.
+                                    </p>
                                 </div>
                             </div>
-                        </td>
-                        <td className="px-6 py-4">
-                             <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 w-fit px-2 py-1 rounded-md border border-slate-200">
-                                <Mail size={12} className="text-slate-400"/>
-                                {user.email}
-                             </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-slate-600">{user.university}</td>
-                        <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                                user.status === UserStatus.VERIFIED ? 'bg-blue-50 text-blue-700 border-blue-100' :
-                                user.status === UserStatus.BANNED ? 'bg-red-50 text-red-700 border-red-100' :
-                                'bg-amber-50 text-amber-700 border-amber-100'
-                            }`}>
-                                {user.status === UserStatus.VERIFIED ? <ShieldCheck size={12}/> : <ShieldAlert size={12} />}
-                                {user.status}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                {user.status !== UserStatus.BANNED ? (
-                                    <button 
-                                        onClick={() => handleStatusChange(user.id, UserStatus.BANNED)}
-                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Ban User">
-                                        <Ban size={16} />
-                                    </button>
-                                ) : (
-                                    <button 
-                                        onClick={() => handleStatusChange(user.id, UserStatus.VERIFIED)}
-                                        className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Unban User">
-                                        <CheckCircle size={16} />
-                                    </button>
-                                )}
-                                
-                                <button 
-                                    onClick={() => handleDelete(user.id)}
-                                    className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors" title="Delete Account">
-                                    <Trash2 size={16} />
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Premium Suspension Confirm Modal */}
+            {showSuspendConfirm && selectedUser && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-rose-100">
+                        <div className="p-8 text-center">
+                            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-rose-50/50">
+                                <Ban className="text-rose-500" size={32} />
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800">Suspend Account?</h3>
+                            <p className="text-slate-500 mt-3 leading-relaxed text-sm">
+                                You are about to suspend **{selectedUser.name}**. This will hide all their active listings and revoke platform access immediately.
+                            </p>
+
+                            <div className="mt-8 flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'SUSPENDED' } : u));
+                                        setSelectedUser({ ...selectedUser, status: 'SUSPENDED' });
+                                        api.createAuditLog('SUSPEND_USER', selectedUser.id, `Full account suspension for critical risk profile and/or fraud reports.`);
+                                        setShowSuspendConfirm(false);
+                                        error('Account Suspended', `${selectedUser.name} has been banned from the platform.`);
+                                    }}
+                                    className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-95"
+                                >
+                                    Yes, Suspend Account
                                 </button>
-                                <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                                    <MoreVertical size={16} />
+                                <button
+                                    onClick={() => setShowSuspendConfirm(false)}
+                                    className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-2xl transition-all"
+                                >
+                                    Cancel
                                 </button>
                             </div>
-                        </td>
-                    </tr>
-                )))}
-            </tbody>
-        </table>
-      </div>
-
-      {/* Ban Reason Modal */}
-      {isBanModalOpen && userToBan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <AlertTriangle className="text-red-600" size={20} />
                         </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800">Ban User</h3>
-                            <p className="text-sm text-slate-500">Action against: <span className="font-semibold text-slate-700">{userToBan.name}</span></p>
+                        <div className="bg-rose-50/50 p-4 border-t border-rose-100 flex items-center gap-3">
+                            <AlertTriangle className="text-rose-500 shrink-0" size={16} />
+                            <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">
+                                This action will be logged in the audit history.
+                            </p>
                         </div>
                     </div>
-                    
-                    <p className="text-sm text-slate-600 mb-4">
-                        This action will immediately restrict the user's access to Unimarket. 
-                        Please provide a specific reason for this moderation action.
-                    </p>
-
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Reason for Ban</label>
-                    <textarea 
-                        className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none resize-none h-32"
-                        placeholder="e.g. Violation of terms, fraudulent listing activity..."
-                        value={banReason}
-                        onChange={(e) => setBanReason(e.target.value)}
-                    ></textarea>
                 </div>
-                <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100">
-                    <button 
-                        onClick={() => setIsBanModalOpen(false)}
-                        className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        onClick={confirmBan}
-                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm shadow-red-200"
-                    >
-                        Confirm Ban
-                    </button>
-                </div>
-            </div>
+            )}
         </div>
-      )}
-
-      {/* Add Admin Modal */}
-      {isAdminModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-800">Add New Administrator</h3>
-                    <button onClick={() => setIsAdminModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                        <X size={20} />
-                    </button>
-                </div>
-                
-                <form onSubmit={handleCreateAdmin}>
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
-                            <input 
-                                type="text"
-                                required
-                                value={newAdmin.name}
-                                onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                placeholder="Jane Doe"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">University Email</label>
-                            <input 
-                                type="email"
-                                required
-                                value={newAdmin.email}
-                                onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                placeholder="jane.doe@university.edu"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">University / Campus</label>
-                            <input 
-                                type="text"
-                                required
-                                value={newAdmin.university}
-                                onChange={(e) => setNewAdmin({...newAdmin, university: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                                placeholder="State University"
-                            />
-                        </div>
-                        
-                        <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3 mt-2">
-                             <ShieldCheck className="text-indigo-600 flex-shrink-0 mt-0.5" size={16} />
-                             <p className="text-xs text-indigo-800 leading-relaxed">
-                                The new administrator will receive an email invitation to set their password. They will have full access to User Management, Listings, and Dispute Resolution.
-                             </p>
-                        </div>
-                    </div>
-                    
-                    <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100">
-                        <button 
-                            type="button"
-                            onClick={() => setIsAdminModalOpen(false)}
-                            className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            type="submit"
-                            disabled={creatingAdmin}
-                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-200 flex items-center gap-2"
-                        >
-                            {creatingAdmin ? <Loader2 className="animate-spin" size={16}/> : null}
-                            Create Account
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default UsersView;

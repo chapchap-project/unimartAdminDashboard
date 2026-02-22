@@ -172,7 +172,7 @@ const AnalyticsView: React.FC = () => {
                                     itemStyle={{ color: '#fff' }}
                                 />
                                 <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
-                                    {data.revenueByCategory.map((_, index) => (
+                                    {(data.revenueByCategory || []).map((_, index) => (
                                         <Cell key={`cell-${index}`} fill={['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][index % 5]} />
                                     ))}
                                 </Bar>

@@ -69,8 +69,6 @@ const App: React.FC = () => {
         setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 10000);
       });
 
-      socketService.startProactiveSimulation();
-
       return () => {
         socketService.disconnect();
       };
@@ -90,8 +88,8 @@ const App: React.FC = () => {
   }, []);
 
   // Login Form State
-  const [email, setEmail] = useState('admin@egerton.ac.ke');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -212,16 +210,6 @@ const App: React.FC = () => {
             </form>
 
             <div className="mt-6 text-center space-y-4">
-              <button
-                onClick={() => {
-                  setEmail('j.pearson@uni.edu');
-                  setPassword('password123');
-                  handleLogin({ preventDefault: () => { } } as any);
-                }}
-                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wider transition-colors"
-              >
-                Quick Login as Super Admin (Mock)
-              </button>
               <p className="text-xs text-slate-400">
                 Protected by Enterprise Single Sign-On
               </p>

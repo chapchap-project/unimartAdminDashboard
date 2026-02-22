@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const BACKEND_URL = 'http://localhost:3000'; // Adjust as needed
+const BACKEND_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -29,37 +29,12 @@ class SocketService {
     onNewAlert(callback: (alert: any) => void) {
         if (this.socket) {
             this.socket.on('new_alert', callback);
-            // Also listen to internal simulation for demo
-            this.socket.on('simulate_alert', callback);
         }
     }
 
-    // Proactive Alert Simulator for Demo
+    // Proactive Alert Simulator Disabled
     startProactiveSimulation() {
-        const scenarios = [
-            { type: 'FRAUD', severity: 'CRITICAL', message: 'Pattern match: Multiple high-value electronics from same IP.' },
-            { type: 'SPIKE', severity: 'WARNING', message: 'Message volume in Furniture category exceeded 2SD from mean.' },
-            { type: 'PAYMENT', severity: 'CRITICAL', message: 'Payment provider error: Batch refund failure for 12 transactions.' },
-            { type: 'SYSTEM', severity: 'INFO', message: 'New seller "StudentHero" listed 4 premium items in < 5 minutes.' },
-            { type: 'REPORT', severity: 'WARNING', message: 'User Sarah Connor received 3 reports in the last hour.' }
-        ];
-
-        let index = 0;
-        setInterval(() => {
-            if (this.socket && this.socket.connected) {
-                const scenario = scenarios[index % scenarios.length];
-                const newAlert = {
-                    ...scenario,
-                    id: `sim-${Date.now()}`,
-                    status: 'ACTIVE',
-                    createdAt: new Date().toISOString()
-                };
-
-                // Emulate server emitting to client
-                this.socket.emit('simulate_alert', newAlert);
-                index++;
-            }
-        }, 60000); // Surface something every 1 minute
+        // Disabled for production/real-backend mode
     }
 
     disconnect() {

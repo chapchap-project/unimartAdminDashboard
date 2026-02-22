@@ -1,13 +1,15 @@
 import React from 'react';
-import { ViewState } from '../types';
+import { ViewState, User } from '../types';
 import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3 } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
+  user: User | null;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout }) => {
   const menuItems = [
     { id: 'DASHBOARD', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'USERS', label: 'User Management', icon: Users },
@@ -85,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
           <span className="font-medium text-sm">Settings</span>
         </button>
         <button
-          onClick={() => window.location.reload()}
+          onClick={onLogout}
           className="w-full flex items-center gap-3 px-3 py-3 text-red-400 hover:bg-red-900/20 hover:text-red-300 rounded-lg transition-colors"
         >
           <LogOut size={20} />
@@ -95,10 +97,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
 
       {/* Admin Profile Mini */}
       <div className="mx-4 mb-6 p-3 bg-slate-800 rounded-xl flex items-center gap-3 border border-slate-700">
-        <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white">JP</div>
+        <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white uppercase">
+          {user?.name?.split(' ').map(n => n[0]).join('') || 'AD'}
+        </div>
         <div className="overflow-hidden">
-          <p className="text-xs font-bold text-white truncate">Jessica Pearson</p>
-          <p className="text-[10px] text-slate-400 truncate">j.pearson@uni.edu</p>
+          <p className="text-xs font-bold text-white truncate">{user?.name || 'Admin User'}</p>
+          <p className="text-[10px] text-slate-400 truncate">{user?.universityEmail || 'admin@egerton.ac.ke'}</p>
         </div>
       </div>
     </div>

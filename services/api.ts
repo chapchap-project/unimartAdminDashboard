@@ -81,6 +81,10 @@ class ApiService {
     });
   }
 
+  async getProfile(): Promise<User> {
+    return await this.request<User>('profile');
+  }
+
   // --- Dashboard ---
   async getDashboardMetrics(): Promise<DashboardMetrics> {
     const [stats, analytics] = await Promise.all([

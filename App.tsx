@@ -11,7 +11,7 @@ import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';
 import SettingsView from './components/SettingsView';
 import CommandPalette from './components/CommandPalette';
-import { ViewState } from './types';
+import { ViewState, User } from './types';
 import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X } from 'lucide-react';
 import { api } from './services/api';
 import { socketService } from './services/socketService';
@@ -21,12 +21,31 @@ import { ToastProvider } from './components/Toast';
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setView] = useState<ViewState>('DASHBOARD');
   const [initialListingId, setInitialListingId] = useState<string | null>(null);
   const [initialReportId, setInitialReportId] = useState<string | null>(null);
   const [initialFraudOnly, setInitialFraudOnly] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT', data: any }[]>([]);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+
+  // Check for existing token and fetch profile
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const token = api.getToken();
+      if (token) {
+        try {
+          const user = await api.getProfile();
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        } catch (err) {
+          console.error("Token invalid or expired", err);
+          handleLogout();
+        }
+      }
+    };
+    checkAuth();
+  }, []);
 
   const navigateToView = (view: ViewState, params?: { targetId?: string, fraudOnly?: boolean }) => {
     setView(view);
@@ -100,12 +119,20 @@ const App: React.FC = () => {
     try {
       const response = await api.login(email, password);
       api.setToken(response.token); // Persist token
+      setCurrentUser(response.user);
       setIsAuthenticated(true);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check credentials.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setView('DASHBOARD');
   };
 
   const renderView = () => {
@@ -223,7 +250,7 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-        <Sidebar currentView={currentView} setView={setView} />
+        <Sidebar currentView={currentView} setView={setView} user={currentUser} onLogout={handleLogout} />
 
         <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-30 shadow-sm">
@@ -250,12 +277,18 @@ const App: React.FC = () => {
               </button>
               <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-700">Jessica Pearson</p>
-                  <p className="text-xs text-indigo-500 font-medium">Super Admin</p>
+                  <p className="text-sm font-semibold text-slate-700">{currentUser?.name || 'Admin User'}</p>
+                  <p className="text-xs text-indigo-500 font-medium">{currentUser?.role || 'Staff'}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-md cursor-pointer hover:shadow-lg transition-all">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-                    <img src="https://picsum.photos/200/200?random=4" alt="Admin" className="w-full h-full object-cover" />
+                    {currentUser?.profileImage ? (
+                      <img src={currentUser.profileImage} alt="Admin" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-indigo-600 font-bold text-xs">
+                        {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'AD'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

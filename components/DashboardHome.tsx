@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardMetrics, PriorityAlert, FraudQueueItem, ViewState } from '../types';
 import { Users, DollarSign, ShoppingBag, AlertTriangle, Sparkles, Loader2, ArrowUpRight, ArrowDownRight, X, ShieldAlert, ChevronRight, MessageSquare, ExternalLink, Flag, MoreVertical, Clock, ArrowUpCircle, CheckCircle2, History } from 'lucide-react';
-import { getDashboardInsights } from '../services/geminiService';
+import { getDashboardInsights } from '../services/aiService';
 import { api } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -29,17 +29,25 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
       setMetrics(m);
       setAlerts(a);
       setFraudQueue(f);
+      setLoading(false); // Reveal UI as soon as raw data is ready
 
+      // Run AI insights in background if metrics exist and we don't have an insight yet
       if (m && !insight) {
-        setLoadingInsight(true);
-        const summary = `Users: ${m.users}, Revenue: KSH ${m.totalRevenue}, Reports: ${m.openReports}, Flagged: ${m.flaggedListings}`;
-        const result = await getDashboardInsights(m, summary);
-        setInsight(result);
-        setLoadingInsight(false);
+        (async () => {
+          setLoadingInsight(true);
+          try {
+            const summary = `Users: ${m.users}, Revenue: KSH ${m.totalRevenue}, Reports: ${m.openReports}, Flagged: ${m.flaggedListings}`;
+            const result = await getDashboardInsights(m, summary);
+            setInsight(result);
+          } catch (err) {
+            console.error("Failed to generate AI insight", err);
+          } finally {
+            setLoadingInsight(false);
+          }
+        })();
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
-    } finally {
       setLoading(false);
     }
   };

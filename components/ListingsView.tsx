@@ -37,9 +37,9 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [p, u] = await Promise.all([api.getProducts(), api.getUsers()]);
-        setProducts(p);
-        setUsers(u);
+        const [pData, uData] = await Promise.all([api.getProducts(), api.getUsers()]);
+        setProducts(pData.listings);
+        setUsers(uData.users);
       } catch (e) {
         console.error("Failed to load listings data", e);
       } finally {

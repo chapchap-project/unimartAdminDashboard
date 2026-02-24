@@ -23,7 +23,7 @@ const UsersView: React.FC = () => {
         const fetchUsers = async () => {
             try {
                 const data = await api.getUsers();
-                setUsers(data);
+                setUsers(data.users);
             } catch (error) {
                 console.error("Failed to fetch users", error);
             } finally {

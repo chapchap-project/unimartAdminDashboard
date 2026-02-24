@@ -132,8 +132,13 @@ class ApiService {
   }
 
   // --- Users ---
-  async getUsers(): Promise<User[]> {
-    return await this.request<User[]>('admin/users');
+  async getUsers(page = 1, limit = 50): Promise<{ users: User[], totalItems: number, totalPages: number }> {
+    const response = await this.request<any>(`admin/users?page=${page}&limit=${limit}`);
+    return {
+      users: response.users || [],
+      totalItems: response.totalItems || 0,
+      totalPages: response.totalPages || 1
+    };
   }
 
   async updateUserRole(userId: string, role: string): Promise<void> {
@@ -148,8 +153,13 @@ class ApiService {
   }
 
   // --- Listings ---
-  async getProducts(): Promise<Product[]> {
-    return await this.request<Product[]>('admin/listings');
+  async getProducts(page = 1, limit = 50): Promise<{ listings: Product[], totalItems: number, totalPages: number }> {
+    const response = await this.request<any>(`admin/listings?page=${page}&limit=${limit}`);
+    return {
+      listings: response.listings || [],
+      totalItems: response.totalItems || 0,
+      totalPages: response.totalPages || 1
+    };
   }
 
   async updateProductStatus(productId: string, status: ProductStatus, reason?: string, note?: string): Promise<void> {
@@ -160,8 +170,13 @@ class ApiService {
   }
 
   // --- Reports ---
-  async getReports(): Promise<Report[]> {
-    return await this.request<Report[]>('admin/reports');
+  async getReports(page = 1, limit = 50): Promise<{ reports: Report[], totalItems: number, totalPages: number }> {
+    const response = await this.request<any>(`admin/reports?page=${page}&limit=${limit}`);
+    return {
+      reports: response.reports || [],
+      totalItems: response.totalItems || 0,
+      totalPages: response.totalPages || 1
+    };
   }
 
   async updateReportStatus(reportId: string, status: string): Promise<void> {
@@ -172,8 +187,13 @@ class ApiService {
   }
 
   // --- Transactions ---
-  async getTransactions(): Promise<Transaction[]> {
-    return await this.request<Transaction[]>('admin/payments');
+  async getTransactions(page = 1, limit = 50): Promise<{ payments: Transaction[], totalItems: number, totalPages: number }> {
+    const response = await this.request<any>(`admin/payments?page=${page}&limit=${limit}`);
+    return {
+      payments: response.payments || [],
+      totalItems: response.totalItems || 0,
+      totalPages: response.totalPages || 1
+    };
   }
 
   // --- Notifications/Announcements ---

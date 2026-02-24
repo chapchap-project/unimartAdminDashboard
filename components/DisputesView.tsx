@@ -18,7 +18,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
         const fetchReports = async () => {
             try {
                 const data = await api.getReports();
-                setReports(data);
+                setReports(data.reports);
             } catch (e) {
                 console.error("Failed to load reports", e);
             } finally {

@@ -13,7 +13,7 @@ const TransactionsView: React.FC = () => {
     const fetchTransactions = async () => {
       try {
         const data = await api.getTransactions();
-        setTransactions(data);
+        setTransactions(data.payments);
       } catch (error) {
         console.error("Failed to fetch transactions", error);
       } finally {

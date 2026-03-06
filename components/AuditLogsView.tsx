@@ -24,10 +24,10 @@ const AuditLogsView: React.FC = () => {
   }, []);
 
   const getLogIcon = (action: string) => {
-    if (action.includes('USER')) return <UserIcon size={16} className="text-indigo-500" />;
+    if (action.includes('USER')) return <UserIcon size={16} className="text-emerald-500" />;
     if (action.includes('LISTING')) return <FileText size={16} className="text-emerald-500" />;
     if (action.includes('SYSTEM') || action.includes('SETTINGS')) return <Activity size={16} className="text-amber-500" />;
-    if (action.includes('CREATE_BROADCAST')) return <Shield size={16} className="text-purple-500" />;
+    if (action.includes('CREATE_BROADCAST')) return <Shield size={16} className="text-teal-500" />;
     return <Clock size={16} className="text-slate-400" />;
   };
 
@@ -35,7 +35,7 @@ const AuditLogsView: React.FC = () => {
     if (action.includes('SUSPEND') || action.includes('DELETE')) return 'bg-rose-50 text-rose-700 border-rose-100';
     if (action.includes('RESTRICT') || action.includes('WARN')) return 'bg-amber-50 text-amber-700 border-amber-100';
     if (action.includes('CREATE')) return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-    return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-100';
   };
 
   const filteredLogs = logs.filter(log => {
@@ -52,7 +52,7 @@ const AuditLogsView: React.FC = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-500" size={32} />
+        <Loader2 className="animate-spin text-emerald-500" size={32} />
       </div>
     );
   }
@@ -94,7 +94,7 @@ const AuditLogsView: React.FC = () => {
             placeholder="Query logs (Admin, Reason, Action)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border-slate-200 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border-slate-200 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
           />
         </div>
       </div>
@@ -130,7 +130,7 @@ const AuditLogsView: React.FC = () => {
 
                   <div className="flex flex-col items-end shrink-0">
                     <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                      <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white">
                         {log.adminName?.charAt(0) || 'S'}
                       </div>
                       <span className="text-xs font-bold text-slate-700">{log.adminName || 'System'}</span>
@@ -146,7 +146,7 @@ const AuditLogsView: React.FC = () => {
 
               {/* Action Menu (Internal view) */}
               <div className="md:w-16 border-l border-slate-50 flex md:flex-col items-center justify-center p-2 bg-slate-50/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors" title="Trace Action">
+                <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors" title="Trace Action">
                   <Activity size={18} />
                 </button>
               </div>
@@ -158,7 +158,7 @@ const AuditLogsView: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
             <ShieldAlert size={48} className="text-slate-200 mb-4" />
             <p className="text-slate-500 font-bold">No surveillance data matches your query.</p>
-            <button onClick={() => { setSearch(''); setFilter('ALL'); }} className="mt-4 text-indigo-600 text-xs font-bold hover:underline">Clear all filters</button>
+            <button onClick={() => { setSearch(''); setFilter('ALL'); }} className="mt-4 text-emerald-600 text-xs font-bold hover:underline">Clear all filters</button>
           </div>
         )}
       </div>
@@ -166,10 +166,10 @@ const AuditLogsView: React.FC = () => {
       {/* Audit Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
         <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full"></div>
-          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Total Admin Actions</p>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-3xl rounded-full"></div>
+          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total Admin Actions</p>
           <p className="text-3xl font-black">{logs.length}</p>
-          <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-indigo-300 bg-indigo-500/10 w-fit px-2 py-1 rounded-full">
+          <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-emerald-300 bg-emerald-500/10 w-fit px-2 py-1 rounded-full">
             <Activity size={10} /> +12% from last week
           </div>
         </div>

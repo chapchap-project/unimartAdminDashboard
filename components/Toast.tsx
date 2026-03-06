@@ -60,14 +60,14 @@ const ToastItem: React.FC<{ toast: Toast; onRemove: () => void }> = ({ toast, on
         success: <CheckCircle2 className="text-emerald-500" size={18} />,
         error: <XCircleIcon className="text-rose-500" size={18} />,
         warning: <AlertTriangle className="text-amber-500" size={18} />,
-        info: <Info className="text-indigo-500" size={18} />,
+        info: <Info className="text-emerald-500" size={18} />,
     };
 
     const bgStyles = {
         success: 'bg-white border-emerald-100',
         error: 'bg-white border-rose-100',
         warning: 'bg-white border-amber-100',
-        info: 'bg-white border-indigo-100',
+        info: 'bg-white border-emerald-100',
     };
 
     return (

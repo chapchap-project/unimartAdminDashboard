@@ -73,7 +73,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">
-          <Loader2 className="animate-spin text-indigo-500 mx-auto mb-4" size={40} />
+          <Loader2 className="animate-spin text-emerald-500 mx-auto mb-4" size={40} />
           <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Synchronizing Intelligence...</p>
         </div>
       </div>
@@ -81,7 +81,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
   }
 
   const kpis = [
-    { title: 'Total Users', value: metrics.users.toLocaleString(), delta: metrics.deltas.users, icon: Users, color: 'indigo', view: 'USERS' as ViewState },
+    { title: 'Total Users', value: metrics.users.toLocaleString(), delta: metrics.deltas.users, icon: Users, color: 'emerald', view: 'USERS' as ViewState },
     { title: 'Active Listings', value: metrics.activeListings.toLocaleString(), delta: metrics.deltas.activeListings, icon: ShoppingBag, color: 'blue', view: 'LISTINGS' as ViewState },
     { title: 'Revenue (7d)', value: `KSH ${metrics.totalRevenue.toLocaleString()}`, delta: metrics.deltas.revenue, icon: DollarSign, color: 'emerald', view: 'TRANSACTIONS' as ViewState },
     { title: 'Open Reports', value: metrics.openReports, delta: metrics.deltas.openReports, icon: MessageSquare, color: 'amber', view: 'REPORTS' as ViewState, inverseDelta: true },
@@ -95,7 +95,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
             Command Center
-            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[10px] font-black rounded uppercase tracking-widest">v2.0 PROACTIVE</span>
+            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded uppercase tracking-widest">v2.0 PROACTIVE</span>
           </h2>
           <p className="text-slate-500 font-medium">Platform Surveillance & Situational Intelligence</p>
         </div>
@@ -111,7 +111,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
           <button
             key={idx}
             onClick={() => setView(kpi.view)}
-            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all text-left group relative overflow-hidden"
+            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all text-left group relative overflow-hidden"
           >
             <div className={`p-2 rounded-lg bg-${kpi.color}-50 text-${kpi.color}-600 w-fit mb-4 group-hover:scale-110 transition-transform`}>
               <kpi.icon size={20} />
@@ -185,7 +185,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{alert.message}</p>
+                      <p className="text-sm font-bold text-slate-800 leading-tight group-hover:text-emerald-600 transition-colors">{alert.message}</p>
 
                       <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0">
                         {alert.actionLabel && (
@@ -231,12 +231,12 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
 
           {/* Section D: AI Executive Summary */}
           <section className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full"></div>
             <div className="relative">
               <div className="flex items-center justify-between mb-8">
-                <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] flex items-center gap-3">
                   AI Executive Intelligence Summary
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
                 </h4>
                 <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-slate-400">
                   {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -258,10 +258,10 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
                   </div>
 
                   <div className="pt-6 border-t border-white/10 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
                       <Activity size={20} />
                     </div>
-                    <p className="text-xs text-indigo-100/60 leading-relaxed font-medium">
+                    <p className="text-xs text-emerald-100/60 leading-relaxed font-medium">
                       Insight derived from multi-vector analysis of platform metrics, fraud signals, and transaction velocity.
                     </p>
                   </div>
@@ -274,7 +274,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
         {/* Right Column: Fraud Queue Snapshot */}
         <div className="lg:col-span-5">
           {/* Section C: Fraud Queue Snapshot */}
-          <section className="bg-white rounded-3xl border border-indigo-50 shadow-sm overflow-hidden flex flex-col h-full ring-1 ring-indigo-50/50">
+          <section className="bg-white rounded-3xl border border-emerald-50 shadow-sm overflow-hidden flex flex-col h-full ring-1 ring-emerald-50/50">
             <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
               <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                 <ShieldAlert size={14} className="text-rose-500" />
@@ -282,7 +282,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
               </h4>
               <button
                 onClick={() => setView('LISTINGS', { fraudOnly: true })}
-                className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1 hover:underline"
+                className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 hover:underline"
               >
                 View Full Queue <ChevronRight size={12} />
               </button>
@@ -346,7 +346,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3 text-slate-800 font-bold">
-                <Clock size={20} className="text-indigo-500" />
+                <Clock size={20} className="text-emerald-500" />
                 <span>Snooze Alert</span>
               </div>
               <button onClick={() => setSnoozeModalId(null)} className="text-slate-400 hover:text-slate-600">
@@ -360,21 +360,21 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
                 className="w-full flex items-center justify-between group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all font-bold text-slate-700"
               >
                 <span>1 Hour</span>
-                <History size={18} className="text-slate-300 group-hover:text-indigo-500" />
+                <History size={18} className="text-slate-300 group-hover:text-emerald-500" />
               </button>
               <button
                 onClick={() => handleAlertAction(snoozeModalId, 'SNOOZED', 4)}
                 className="w-full flex items-center justify-between group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all font-bold text-slate-700"
               >
                 <span>4 Hours</span>
-                <History size={18} className="text-slate-300 group-hover:text-indigo-500" />
+                <History size={18} className="text-slate-300 group-hover:text-emerald-500" />
               </button>
               <button
                 onClick={() => handleAlertAction(snoozeModalId, 'SNOOZED', 24)}
                 className="w-full flex items-center justify-between group p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all font-bold text-slate-700"
               >
                 <span>24 Hours (Next Day)</span>
-                <History size={18} className="text-slate-300 group-hover:text-indigo-500" />
+                <History size={18} className="text-slate-300 group-hover:text-emerald-500" />
               </button>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100">

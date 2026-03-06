@@ -10,6 +10,7 @@ import AnnouncementsView from './components/AnnouncementsView';
 import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';
 import SettingsView from './components/SettingsView';
+import LogsView from './components/LogsView';
 import CommandPalette from './components/CommandPalette';
 import { ViewState, User } from './types';
 import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X } from 'lucide-react';
@@ -158,6 +159,8 @@ const App: React.FC = () => {
         return <AnnouncementsView />;
       case 'SYSTEM_HEALTH':
         return <SystemHealthView />;
+      case 'LOGS':
+        return <LogsView />;
       case 'ANALYTICS':
         return <AnalyticsView />;
       case 'SETTINGS':
@@ -176,12 +179,12 @@ const App: React.FC = () => {
     return (
       <ToastProvider>
         <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
-          <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-          <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+          <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
 
           <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 z-10 relative">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
+              <div className="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
                 <GraduationCap className="text-white w-8 h-8" />
               </div>
               <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Unimarket Admin</h1>
@@ -196,7 +199,7 @@ const App: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-sm"
                     placeholder="admin@egerton.ac.ke"
                   />
                   <LogIn className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -210,7 +213,7 @@ const App: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all text-sm"
                     placeholder="••••••••"
                   />
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -226,7 +229,7 @@ const App: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -255,7 +258,7 @@ const App: React.FC = () => {
         <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-30 shadow-sm">
             <div className="relative w-96 group cursor-pointer" onClick={() => setIsPaletteOpen(true)}>
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
                 <Search size={18} />
               </span>
               <input
@@ -271,21 +274,21 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-6">
-              <button className="relative p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all">
+              <button className="relative p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all">
                 <Bell size={20} />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
               </button>
               <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-700">{currentUser?.name || 'Admin User'}</p>
-                  <p className="text-xs text-indigo-500 font-medium">{currentUser?.role || 'Staff'}</p>
+                  <p className="text-xs text-emerald-500 font-medium">{currentUser?.role || 'Staff'}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shadow-md cursor-pointer hover:shadow-lg transition-all">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 p-0.5 shadow-md cursor-pointer hover:shadow-lg transition-all">
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
                     {currentUser?.profileImage ? (
                       <img src={currentUser.profileImage} alt="Admin" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="text-indigo-600 font-bold text-xs">
+                      <div className="text-emerald-600 font-bold text-xs">
                         {currentUser?.name?.split(' ').map(n => n[0]).join('') || 'AD'}
                       </div>
                     )}
@@ -295,7 +298,7 @@ const App: React.FC = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-8 overflow-y-auto bg-slate-50 scrollbar-thin scrollbar-thumb-indigo-200 scrollbar-track-transparent">
+          <main className="flex-1 p-8 overflow-y-auto bg-slate-50 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
             <div className="max-w-7xl mx-auto">
               {renderView()}
             </div>
@@ -308,7 +311,7 @@ const App: React.FC = () => {
               key={notif.id}
               className={`${notif.type === 'ALERT' && notif.data.severity === 'CRITICAL' ? 'bg-rose-950 border-rose-500 ring-2 ring-rose-500/20' : 'bg-slate-900 border-slate-700'} text-white p-4 rounded-xl shadow-2xl border flex items-start gap-4 animate-in slide-in-from-right-8 duration-300`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.type === 'ALERT' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-red-500/20 text-red-500'
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.type === 'ALERT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-500'
                 }`}>
                 {notif.type === 'ALERT' ? <Bell size={20} /> : <AlertCircle size={20} />}
               </div>
@@ -327,7 +330,7 @@ const App: React.FC = () => {
                     }
                     setNotifications(prev => prev.filter(n => n.id !== notif.id));
                   }}
-                  className="mt-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-widest"
+                  className="mt-2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-widest"
                 >
                   Investigate Now
                 </button>

@@ -152,7 +152,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
                             key={`${item.type}-${item.id}-${idx}`}
                             onClick={() => handleSelect(item)}
                             onMouseEnter={() => setSelectedIndex(idx)}
-                            className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${selectedIndex === idx ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 translate-x-1' : 'hover:bg-slate-50 text-slate-700'
+                            className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all text-left ${selectedIndex === idx ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 translate-x-1' : 'hover:bg-slate-50 text-slate-700'
                                 }`}
                         >
                             <div className={`p-2 rounded-lg ${selectedIndex === idx ? 'bg-white/20' : 'bg-slate-100'}`}>
@@ -164,7 +164,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
                                     {item.type === 'ACTION' && <span className={`text-[10px] uppercase font-black px-1 rounded ${selectedIndex === idx ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-600'}`}>System</span>}
                                 </p>
                                 {item.subtitle && (
-                                    <p className={`text-xs mt-1 truncate ${selectedIndex === idx ? 'text-indigo-100' : 'text-slate-400'}`}>
+                                    <p className={`text-xs mt-1 truncate ${selectedIndex === idx ? 'text-emerald-100' : 'text-slate-400'}`}>
                                         {item.subtitle}
                                     </p>
                                 )}
@@ -177,7 +177,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
                 {/* Footer */}
                 <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between px-6">
                     <div className="flex items-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <span className="flex items-center gap-1.5"><Zap size={10} className="text-indigo-500" /> Navigate</span>
+                        <span className="flex items-center gap-1.5"><Zap size={10} className="text-emerald-500" /> Navigate</span>
                         <span className="flex items-center gap-1.5"><Shield size={10} className="text-rose-500" /> Action</span>
                         <span className="flex items-center gap-1.5"><Terminal size={10} className="text-emerald-500" /> Command</span>
                     </div>

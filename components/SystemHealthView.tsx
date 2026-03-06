@@ -44,7 +44,7 @@ const SystemHealthView: React.FC = () => {
     if (loading || !health) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <Loader2 className="animate-spin text-indigo-500" size={32} />
+                <Loader2 className="animate-spin text-emerald-500" size={32} />
             </div>
         );
     }
@@ -142,7 +142,7 @@ const SystemHealthView: React.FC = () => {
                 {/* Performance Metrics */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <Activity size={20} className="text-indigo-500" />
+                        <Activity size={20} className="text-emerald-500" />
                         Node.js Cluster Performance
                     </h3>
 
@@ -152,24 +152,24 @@ const SystemHealthView: React.FC = () => {
                             value={health.cpuUsage}
                             icon={Cpu}
                             unit="%"
-                            color="indigo"
+                            color="emerald"
                         />
                         <PerformanceBar
                             label="Memory Usage"
                             value={health.memoryUsage}
                             icon={Database}
                             unit="%"
-                            color="purple"
+                            color="teal"
                         />
                     </div>
 
-                    <div className="mt-10 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100/50 flex items-start gap-4">
-                        <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+                    <div className="mt-10 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50 flex items-start gap-4">
+                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
                             <Clock size={16} />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Health Monitoring</p>
-                            <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+                            <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Health Monitoring</p>
+                            <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
                                 Metrics are collected every 30 seconds from all active nodes. Historical data is available in the infrastructure monitoring tool (Grafana).
                             </p>
                         </div>
@@ -210,7 +210,7 @@ const HealthCard: React.FC<{
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all group">
             <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 bg-slate-50 rounded-xl text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                <div className="p-2.5 bg-slate-50 rounded-xl text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                     <Icon size={20} />
                 </div>
                 <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full border bg-opacity-10 ${getStatusColor(status).replace('text', 'bg')} ${getStatusColor(status)} ${getStatusColor(status).replace('text', 'border').replace('500', '100')}`}>
@@ -234,11 +234,11 @@ const PerformanceBar: React.FC<{
     value: number;
     icon: React.ElementType;
     unit: string;
-    color: 'indigo' | 'purple'
+    color: 'emerald' | 'teal'
 }> = ({ label, value, icon: Icon, unit, color }) => {
     const barColors = {
-        indigo: 'bg-indigo-600',
-        purple: 'bg-purple-600'
+        emerald: 'bg-emerald-600',
+        teal: 'bg-teal-600'
     };
 
     return (

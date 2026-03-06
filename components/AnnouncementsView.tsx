@@ -67,7 +67,7 @@ const AnnouncementsView: React.FC = () => {
   };
 
   if (loading) {
-      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+      return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
   }
 
   return (
@@ -79,7 +79,7 @@ const AnnouncementsView: React.FC = () => {
         </div>
         <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-indigo-200 font-medium flex items-center gap-2 transition-all"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-emerald-200 font-medium flex items-center gap-2 transition-all"
         >
             <Plus size={18} />
             Create Announcement
@@ -146,7 +146,7 @@ const AnnouncementsView: React.FC = () => {
             <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center p-6 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
                             <Megaphone size={20} />
                         </div>
                         <h3 className="text-lg font-bold text-slate-800">New Broadcast</h3>
@@ -165,7 +165,7 @@ const AnnouncementsView: React.FC = () => {
                                 required
                                 value={formData.title}
                                 onChange={(e) => setFormData({...formData, title: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                                 placeholder="e.g. Scheduled Maintenance"
                             />
                         </div>
@@ -176,7 +176,7 @@ const AnnouncementsView: React.FC = () => {
                                 <select 
                                     value={formData.priority}
                                     onChange={(e) => setFormData({...formData, priority: e.target.value as any})}
-                                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                 >
                                     <option value="INFO">Info (Blue)</option>
                                     <option value="WARNING">Warning (Amber)</option>
@@ -188,7 +188,7 @@ const AnnouncementsView: React.FC = () => {
                                 <select 
                                     value={formData.targetAudience}
                                     onChange={(e) => setFormData({...formData, targetAudience: e.target.value as Announcement['targetAudience']})}
-                                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                 >
                                     <option value="ALL">All Users</option>
                                     <option value="BUYERS">Buyers Only</option>
@@ -204,7 +204,7 @@ const AnnouncementsView: React.FC = () => {
                                 required
                                 value={formData.message}
                                 onChange={(e) => setFormData({...formData, message: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none resize-none h-24"
+                                className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none resize-none h-24"
                                 placeholder="Write your message here..."
                             ></textarea>
                         </div>
@@ -216,7 +216,7 @@ const AnnouncementsView: React.FC = () => {
                                 required
                                 value={formData.expiresAt}
                                 onChange={(e) => setFormData({...formData, expiresAt: e.target.value})}
-                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                             />
                         </div>
                     </div>
@@ -232,7 +232,7 @@ const AnnouncementsView: React.FC = () => {
                         <button 
                             type="submit"
                             disabled={sending}
-                            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-200 flex items-center gap-2"
+                            className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm shadow-emerald-200 flex items-center gap-2"
                         >
                             {sending ? <Loader2 className="animate-spin" size={16}/> : <Send size={16}/>}
                             Publish Broadcast

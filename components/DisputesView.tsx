@@ -63,7 +63,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
     });
 
     if (loading) {
-        return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+        return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
     }
 
     return (
@@ -103,7 +103,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                         {filteredReports.map((report) => (
                             <tr key={report.id} className="hover:bg-slate-50/80 transition-colors group cursor-pointer" onClick={() => setSelectedReport(report)}>
                                 <td className="px-6 py-4">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${report.type === 'LISTING' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-purple-50 text-purple-700 border-purple-100'}`}>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${report.type === 'LISTING' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-teal-50 text-teal-700 border-teal-100'}`}>
                                         {report.type}
                                     </span>
                                 </td>
@@ -133,7 +133,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Review</button>
+                                    <button className="text-emerald-600 hover:text-emerald-800 text-sm font-medium">Review</button>
                                 </td>
                             </tr>
                         ))}
@@ -200,7 +200,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                                 </button>
                                 <button
                                     onClick={() => handleStatusChange(selectedReport.id, 'RESOLVED')}
-                                    className="px-5 py-2.5 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200">
+                                    className="px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200">
                                     Mark as Resolved
                                 </button>
                             </div>

@@ -17,6 +17,11 @@ const UsersView: React.FC = () => {
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [creatingAdmin, setCreatingAdmin] = useState(false);
     const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
+    const [newUserForm, setNewUserForm] = useState({ name: '', universityEmail: '', password: '', role: 'USER' as UserRole });
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editForm, setEditForm] = useState({ name: '', universityEmail: '' });
+    const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
+    const [notifyMessage, setNotifyMessage] = useState('');
 
     // Load users from API on mount
     useEffect(() => {
@@ -32,6 +37,48 @@ const UsersView: React.FC = () => {
         };
         fetchUsers();
     }, []);
+
+    const handleCreateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreatingAdmin(true);
+        try {
+            const res = await api.createUser(newUserForm);
+            setUsers([res.user, ...users]);
+            setIsAdminModalOpen(false);
+            setNewUserForm({ name: '', universityEmail: '', password: '', role: UserRole.USER });
+            success('User Created', `${res.user.name} has been added successfully.`);
+        } catch (err: any) {
+            error('Creation Failed', err.message);
+        } finally {
+            setCreatingAdmin(false);
+        }
+    };
+
+    const handleUpdateUser = async () => {
+        if (!selectedUser) return;
+        try {
+            const res = await api.updateUserData(selectedUser.id, editForm);
+            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, name: res.user.name, universityEmail: res.user.universityEmail } : u));
+            setSelectedUser({ ...selectedUser, name: res.user.name, universityEmail: res.user.universityEmail });
+            setIsEditingProfile(false);
+            success('Profile Updated', 'User data saved.');
+        } catch (err: any) {
+            error('Update Failed', err.message);
+        }
+    };
+
+    const handleNotifyUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUser || !notifyMessage.trim()) return;
+        try {
+            await api.notifyUser(selectedUser.id, { message: notifyMessage, title: 'Admin Communication' });
+            setIsNotifyModalOpen(false);
+            setNotifyMessage('');
+            success('Notification Sent', `Message pushed to ${selectedUser.name}.`);
+        } catch (err: any) {
+            error('Notify Failed', err.message);
+        }
+    };
 
     const handleRoleChange = async (userId: string, newRole: UserRole) => {
         // Optimistic UI Update
@@ -84,7 +131,7 @@ const UsersView: React.FC = () => {
     const sortedUsers = getSortedUsers();
 
     if (loading) {
-        return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+        return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
     }
 
     return (
@@ -98,10 +145,10 @@ const UsersView: React.FC = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => setIsAdminModalOpen(true)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md shadow-indigo-200 font-medium text-sm flex items-center gap-2"
+                        className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 shadow-md shadow-emerald-200 font-medium text-sm flex items-center gap-2"
                     >
                         <UserPlus size={16} />
-                        Add Administrator
+                        Add User
                     </button>
                 </div>
             </div>
@@ -128,7 +175,7 @@ const UsersView: React.FC = () => {
                                 key={s}
                                 onClick={() => setSortBy(s)}
                                 className={`px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-wider font-extrabold transition-all border ${sortBy === s
-                                    ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm'
                                     : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
                                     }`}
                             >
@@ -144,7 +191,7 @@ const UsersView: React.FC = () => {
                         placeholder="Search by name or email..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border-slate-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border-slate-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                     />
                 </div>
             </div>
@@ -261,8 +308,26 @@ const UsersView: React.FC = () => {
                     >
                         {/* Header */}
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-800 text-lg">User Intelligence Profile</h3>
-                            <button onClick={() => setSelectedUser(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                            <div className="flex items-center gap-4">
+                                <h3 className="font-bold text-slate-800 text-lg">User Intelligence Profile</h3>
+                                {!isEditingProfile ? (
+                                    <button 
+                                        onClick={() => {
+                                            setEditForm({ name: selectedUser.name, universityEmail: selectedUser.universityEmail });
+                                            setIsEditingProfile(true);
+                                        }}
+                                        className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <button onClick={handleUpdateUser} className="text-xs font-bold text-white bg-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">Save</button>
+                                        <button onClick={() => setIsEditingProfile(false)} className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
+                                    </div>
+                                )}
+                            </div>
+                            <button onClick={() => { setSelectedUser(null); setIsEditingProfile(false); }} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
                                 <X size={20} />
                             </button>
                         </div>
@@ -282,12 +347,31 @@ const UsersView: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1 pt-2">
-                                    <h4 className="text-2xl font-extrabold text-slate-900 tracking-tight">{selectedUser.name}</h4>
-                                    <p className="text-slate-500 font-medium flex items-center gap-1.5 mt-1 text-sm">
-                                        <Mail size={14} /> {selectedUser.universityEmail}
-                                    </p>
+                                    {isEditingProfile ? (
+                                        <div className="space-y-3 mb-4">
+                                            <input 
+                                                type="text" 
+                                                value={editForm.name} 
+                                                onChange={e => setEditForm({ ...editForm, name: e.target.value })} 
+                                                className="w-full text-xl font-bold border-b border-slate-300 focus:border-emerald-500 outline-none pb-1 bg-transparent text-slate-900" 
+                                            />
+                                            <input 
+                                                type="email" 
+                                                value={editForm.universityEmail} 
+                                                onChange={e => setEditForm({ ...editForm, universityEmail: e.target.value })} 
+                                                className="w-full text-sm font-medium text-slate-600 border-b border-slate-300 focus:border-emerald-500 outline-none pb-1 bg-transparent" 
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <h4 className="text-2xl font-extrabold text-slate-900 tracking-tight">{selectedUser.name}</h4>
+                                            <p className="text-slate-500 font-medium flex items-center gap-1.5 mt-1 text-sm">
+                                                <Mail size={14} /> {selectedUser.universityEmail}
+                                            </p>
+                                        </>
+                                    )}
                                     <div className="flex items-center gap-3 mt-4">
-                                        <div className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border border-indigo-100">
+                                        <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border border-emerald-100">
                                             {selectedUser.role}
                                         </div>
                                         {selectedUser.isVerified && (
@@ -359,20 +443,21 @@ const UsersView: React.FC = () => {
                                             <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Moderation Flags</p>
                                         </div>
                                     </div>
-                                    <button className="text-xs font-bold text-indigo-600 hover:underline">View History</button>
+                                    <button className="text-xs font-bold text-emerald-600 hover:underline">View History</button>
                                 </div>
                             </div>
 
                             {/* Moderation Actions Terminal */}
                             <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full"></div>
-                                <h5 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6">Moderation Terminal</h5>
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full"></div>
+                                <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-6">Moderation Terminal</h5>
 
                                 <div className="space-y-4">
                                     <button
                                         onClick={() => {
                                             setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'WARNED' } : u));
                                             setSelectedUser({ ...selectedUser, status: 'WARNED' });
+                                            api.updateUserStatus(selectedUser.id, 'WARNED');
                                             api.createAuditLog('WARN_USER', selectedUser.id, `Issued official warning notification for community guidelines violation.`);
                                             success('User Warned', `An official warning has been sent to ${selectedUser.name}.`);
                                         }}
@@ -394,6 +479,7 @@ const UsersView: React.FC = () => {
                                         onClick={() => {
                                             setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'RESTRICTED' } : u));
                                             setSelectedUser({ ...selectedUser, status: 'RESTRICTED' });
+                                            api.updateUserStatus(selectedUser.id, 'RESTRICTED');
                                             api.createAuditLog('RESTRICT_USER', selectedUser.id, `Revoked marketplace privileges due to suspicious activity detected.`);
                                             toast('Access Restricted', `${selectedUser.name}'s marketplace privileges have been limited.`, 'warning');
                                         }}
@@ -469,14 +555,14 @@ const UsersView: React.FC = () => {
                                     <input
                                         type="email"
                                         required
-                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                                         placeholder="jane.doe@egerton.ac.ke"
                                     />
                                 </div>
 
-                                <div className="bg-indigo-50 p-3 rounded-lg flex items-start gap-3 mt-2">
-                                    <ShieldCheck className="text-indigo-600 flex-shrink-0 mt-0.5" size={16} />
-                                    <p className="text-xs text-indigo-800 leading-relaxed">
+                                <div className="bg-emerald-50 p-3 rounded-lg flex items-start gap-3 mt-2">
+                                    <ShieldCheck className="text-emerald-600 flex-shrink-0 mt-0.5" size={16} />
+                                    <p className="text-xs text-emerald-800 leading-relaxed">
                                         Promoting a user to administrator gives them full access to all dashboard modules including User Management and Listings.
                                     </p>
                                 </div>
@@ -504,6 +590,7 @@ const UsersView: React.FC = () => {
                                     onClick={() => {
                                         setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'SUSPENDED' } : u));
                                         setSelectedUser({ ...selectedUser, status: 'SUSPENDED' });
+                                        api.updateUserStatus(selectedUser.id, 'SUSPENDED');
                                         api.createAuditLog('SUSPEND_USER', selectedUser.id, `Full account suspension for critical risk profile and/or fraud reports.`);
                                         setShowSuspendConfirm(false);
                                         error('Account Suspended', `${selectedUser.name} has been banned from the platform.`);
@@ -526,6 +613,51 @@ const UsersView: React.FC = () => {
                                 This action will be logged in the audit history.
                             </p>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Direct Notification Modal */}
+            {isNotifyModalOpen && selectedUser && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-800">Message {selectedUser.name}</h3>
+                            <button onClick={() => setIsNotifyModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleNotifyUser}>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Notification Payload</label>
+                                    <textarea
+                                        required
+                                        autoFocus
+                                        rows={4}
+                                        value={notifyMessage}
+                                        onChange={e => setNotifyMessage(e.target.value)}
+                                        placeholder="Type the message to send to this user..."
+                                        className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                                    ></textarea>
+                                </div>
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsNotifyModalOpen(false)}
+                                        className="px-4 py-2 font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition-all flex items-center gap-2"
+                                    >
+                                        <Mail size={16} /> Send Alert
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

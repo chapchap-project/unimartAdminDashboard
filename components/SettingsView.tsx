@@ -37,7 +37,7 @@ const SettingsView: React.FC = () => {
                 </div>
                 <button
                     onClick={handleSave}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-indigo-200 font-medium flex items-center gap-2 transition-all"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-emerald-200 font-medium flex items-center gap-2 transition-all"
                 >
                     <Save size={18} />
                     Save Changes
@@ -48,7 +48,7 @@ const SettingsView: React.FC = () => {
                 {/* API Configuration Card */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50">
-                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
                             <Server size={24} />
                         </div>
                         <div>
@@ -69,7 +69,7 @@ const SettingsView: React.FC = () => {
                                         setBaseUrl(e.target.value);
                                         setConnectionStatus('IDLE');
                                     }}
-                                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all bg-white text-slate-800"
+                                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm transition-all bg-white text-slate-800"
                                     placeholder="https://api.unimarket.edu/v1"
                                 />
                             </div>
@@ -80,7 +80,7 @@ const SettingsView: React.FC = () => {
 
                         <div className="flex items-center justify-between pt-2">
                             <div className="flex items-center gap-2">
-                                {connectionStatus === 'TESTING' && <RefreshCw className="animate-spin text-indigo-500" size={18} />}
+                                {connectionStatus === 'TESTING' && <RefreshCw className="animate-spin text-emerald-500" size={18} />}
                                 {connectionStatus === 'SUCCESS' && <CheckCircle className="text-emerald-500" size={18} />}
                                 {connectionStatus === 'FAILED' && <XCircle className="text-red-500" size={18} />}
 
@@ -96,7 +96,7 @@ const SettingsView: React.FC = () => {
                             <button
                                 onClick={handleTestConnection}
                                 disabled={connectionStatus === 'TESTING'}
-                                className="text-sm font-bold text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                                className="text-sm font-bold text-emerald-600 hover:text-emerald-800 disabled:opacity-50"
                             >
                                 Test Connectivity
                             </button>
@@ -105,31 +105,31 @@ const SettingsView: React.FC = () => {
                 </div>
 
                 {/* Documentation Info */}
-                <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
+                <div className="bg-emerald-900 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
 
                     <h3 className="font-bold text-lg mb-2 relative z-10">API Documentation</h3>
-                    <p className="text-indigo-200 text-sm mb-6 relative z-10">
+                    <p className="text-emerald-200 text-sm mb-6 relative z-10">
                         Ensure your backend endpoints match the expected structure for the dashboard to function correctly.
                     </p>
 
                     <div className="space-y-3 relative z-10">
-                        <div className="flex items-center gap-3 text-sm bg-indigo-800/50 p-3 rounded-lg border border-indigo-700">
-                            <span className="font-mono text-indigo-300">GET</span>
+                        <div className="flex items-center gap-3 text-sm bg-emerald-800/50 p-3 rounded-lg border border-emerald-700">
+                            <span className="font-mono text-emerald-300">GET</span>
                             <span>/admin/users</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm bg-indigo-800/50 p-3 rounded-lg border border-indigo-700">
-                            <span className="font-mono text-indigo-300">GET</span>
+                        <div className="flex items-center gap-3 text-sm bg-emerald-800/50 p-3 rounded-lg border border-emerald-700">
+                            <span className="font-mono text-emerald-300">GET</span>
                             <span>/admin/listings</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm bg-indigo-800/50 p-3 rounded-lg border border-indigo-700">
-                            <span className="font-mono text-indigo-300">POST</span>
+                        <div className="flex items-center gap-3 text-sm bg-emerald-800/50 p-3 rounded-lg border border-emerald-700">
+                            <span className="font-mono text-emerald-300">POST</span>
                             <span>/admin/disputes/:id/resolve</span>
                         </div>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-indigo-700/50">
-                        <p className="text-xs text-indigo-400 mb-2">Connected Service</p>
+                    <div className="mt-8 pt-6 border-t border-emerald-700/50">
+                        <p className="text-xs text-emerald-400 mb-2">Connected Service</p>
                         <div className="flex items-center gap-2 font-mono text-sm">
                             <div className={`w-2 h-2 rounded-full ${connectionStatus === 'SUCCESS' ? 'bg-emerald-400' : 'bg-red-400'}`}></div>
                             {baseUrl}

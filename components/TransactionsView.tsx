@@ -36,13 +36,13 @@ const TransactionsView: React.FC = () => {
       case 'SUCCESS': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
       case 'PENDING': return 'bg-amber-50 text-amber-700 border-amber-100';
       case 'FAILED': return 'bg-red-50 text-red-700 border-red-100';
-      case 'REFUNDED': return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'REFUNDED': return 'bg-teal-50 text-teal-700 border-teal-100';
       default: return 'bg-slate-50 text-slate-600 border-slate-100';
     }
   };
 
   if (loading) {
-    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
   }
 
   const totalVolume = transactions.filter(t => t.paymentStatus === 'SUCCESS').reduce((acc, t) => acc + t.amount, 0);
@@ -62,7 +62,7 @@ const TransactionsView: React.FC = () => {
               placeholder="Search transaction..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm w-64"
+              className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm w-64"
             />
           </div>
         </div>
@@ -75,7 +75,7 @@ const TransactionsView: React.FC = () => {
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Volume</p>
             <h3 className="text-2xl font-bold text-slate-800 mt-1">KSH {totalVolume.toLocaleString()}</h3>
           </div>
-          <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+          <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
             <DollarSign size={24} />
           </div>
         </div>
@@ -89,7 +89,7 @@ const TransactionsView: React.FC = () => {
               key={status}
               onClick={() => setFilter(status)}
               className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${filter === status
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-emerald-600 text-emerald-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
             >
@@ -124,7 +124,7 @@ const TransactionsView: React.FC = () => {
                         <ArrowDownLeft size={12} className="text-emerald-500" /> From: {tx.buyer.name}
                       </span>
                       <span className="flex items-center gap-1 text-slate-600">
-                        <ArrowUpRight size={12} className="text-indigo-500" /> To: {tx.seller.name}
+                        <ArrowUpRight size={12} className="text-emerald-500" /> To: {tx.seller.name}
                       </span>
                     </div>
                   </td>

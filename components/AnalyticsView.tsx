@@ -32,7 +32,7 @@ const AnalyticsView: React.FC = () => {
     if (loading || !data) {
         return (
             <div className="flex h-96 items-center justify-center">
-                <Loader2 className="animate-spin text-indigo-500" size={32} />
+                <Loader2 className="animate-spin text-emerald-500" size={32} />
             </div>
         );
     }
@@ -43,7 +43,7 @@ const AnalyticsView: React.FC = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 tracking-tight">System Intelligence</h2>
                     <p className="text-slate-500 mt-1 flex items-center gap-2">
-                        <Target size={14} className="text-indigo-500" />
+                        <Target size={14} className="text-emerald-500" />
                         Monitoring behavioral patterns and conversion velocity.
                     </p>
                 </div>
@@ -69,7 +69,7 @@ const AnalyticsView: React.FC = () => {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <Users2 size={20} className="text-indigo-500" />
+                            <Users2 size={20} className="text-emerald-500" />
                             User Retention Cycle
                         </h3>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">New vs Returning</span>
@@ -99,9 +99,9 @@ const AnalyticsView: React.FC = () => {
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-start gap-4">
-                        <Zap size={16} className="text-indigo-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-indigo-900 leading-relaxed font-medium">
+                    <div className="mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-4">
+                        <Zap size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                        <p className="text-xs text-emerald-900 leading-relaxed font-medium">
                             **Monitoring Insight**: Returning user activity accounts for 68% of sessions. Stickiness is increasing (+4% WOW).
                         </p>
                     </div>
@@ -205,7 +205,7 @@ const AnalyticsView: React.FC = () => {
                                 </div>
                                 <div className="h-8 bg-slate-50 rounded-lg overflow-hidden border border-slate-100 relative shadow-inner">
                                     <div
-                                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-1000 ease-out flex items-center justify-end px-3 relative z-10"
+                                        className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-1000 ease-out flex items-center justify-end px-3 relative z-10"
                                         style={{ width: `${step.percentage}%`, opacity: 1 - (idx * 0.15) }}
                                     >
                                         <span className="text-white text-[10px] font-bold">{step.percentage}%</span>
@@ -217,7 +217,7 @@ const AnalyticsView: React.FC = () => {
                     </div>
 
                     <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-4">
-                        <Activity size={16} className="text-indigo-600 mt-0.5 shrink-0" />
+                        <Activity size={16} className="text-emerald-600 mt-0.5 shrink-0" />
                         <p className="text-xs text-slate-600 leading-relaxed font-medium">
                             **Flow Analysis**: Significant dropout (46%) between Cart and Checkout. Potential Friction in Payment Gateway or Shipping calculation.
                         </p>

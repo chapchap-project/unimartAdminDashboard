@@ -119,7 +119,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
   };
 
   if (loading) {
-    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={32} /></div>;
+    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
   }
 
   return (
@@ -164,14 +164,14 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 placeholder="Search by Title, ID, or Seller..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+                className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm font-medium"
               />
             </div>
 
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value as any)}
-              className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500"
+              className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-emerald-500"
             >
               <option value="ALL">All Categories</option>
               {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -180,7 +180,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500"
+              className="bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 focus:ring-2 focus:ring-emerald-500"
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
@@ -201,7 +201,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 step="1"
                 value={riskFilter}
                 onChange={(e) => setRiskFilter(parseInt(e.target.value))}
-                className="w-24 accent-indigo-600"
+                className="w-24 accent-emerald-600"
               />
             </div>
 
@@ -217,7 +217,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
 
           {/* Bulk Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="bg-indigo-900 text-white p-4 rounded-2xl shadow-xl shadow-indigo-200 flex items-center justify-between animate-in slide-in-from-top-4">
+            <div className="bg-emerald-900 text-white p-4 rounded-2xl shadow-xl shadow-emerald-200 flex items-center justify-between animate-in slide-in-from-top-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-black">
                   {selectedIds.length}
@@ -231,7 +231,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 <button onClick={() => handleBulkAction('HIDE')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
                   <Eye size={14} /> Hide
                 </button>
-                <button onClick={() => handleBulkAction('WARN')} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
+                <button onClick={() => handleBulkAction('WARN')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
                   <MessageSquare size={14} /> Warn Seller
                 </button>
                 <button onClick={() => handleBulkAction('REMOVE')} className="px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
@@ -253,7 +253,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                   <th className="px-6 py-4 w-10">
                     <input
                       type="checkbox"
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                       checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0}
                       onChange={handleSelectAll}
                     />
@@ -268,13 +268,13 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 {filteredProducts.map(p => (
                   <tr
                     key={p.id}
-                    className={`group hover:bg-indigo-50/30 transition-all cursor-pointer ${selectedProduct?.id === p.id ? 'bg-indigo-50 shadow-inner' : ''}`}
+                    className={`group hover:bg-emerald-50/30 transition-all cursor-pointer ${selectedProduct?.id === p.id ? 'bg-emerald-50 shadow-inner' : ''}`}
                     onClick={() => setSelectedProduct(p)}
                   >
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                         checked={selectedIds.includes(p.id)}
                         onChange={() => handleToggleSelect(p.id)}
                       />
@@ -285,11 +285,11 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                           <img src={p.images[0]} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{p.title}</h4>
+                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{p.title}</h4>
                           <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-slate-400">
                             <span className="flex items-center gap-1 uppercase tracking-widest font-black text-slate-300">{p.category}</span>
                             <span>•</span>
-                            <span className="text-indigo-500">KSH {p.price.toLocaleString()}</span>
+                            <span className="text-emerald-500">KSH {p.price.toLocaleString()}</span>
                             <span>•</span>
                             <span className="inline-flex items-center gap-1"><Clock size={10} /> {new Date(p.createdAt).toLocaleDateString()}</span>
                           </div>
@@ -328,7 +328,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                         </button>
                         <button
                           onClick={() => setSelectedProduct(p)}
-                          className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"
+                          className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
                         >
                           Audit
                         </button>
@@ -342,7 +342,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
               <div className="p-20 flex flex-col items-center text-center">
                 <Search size={48} className="text-slate-200 mb-4" />
                 <h4 className="text-lg font-bold text-slate-400">No listings match your filters</h4>
-                <button onClick={() => { setSearch(''); setCategoryFilter('ALL'); setStatusFilter('ALL'); setRiskFilter(0); }} className="mt-4 text-indigo-500 font-bold hover:underline">
+                <button onClick={() => { setSearch(''); setCategoryFilter('ALL'); setStatusFilter('ALL'); setRiskFilter(0); }} className="mt-4 text-emerald-500 font-bold hover:underline">
                   Reset all filters
                 </button>
               </div>
@@ -407,7 +407,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
       {/* Panel Header */}
       <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${product.riskScore > 7 ? 'bg-rose-500' : 'bg-indigo-600'} text-white shadow-lg`}>
+          <div className={`p-2 rounded-xl ${product.riskScore > 7 ? 'bg-rose-500' : 'bg-emerald-600'} text-white shadow-lg`}>
             <ShieldAlert size={20} />
           </div>
           <div>
@@ -434,7 +434,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
           <div className="mt-4 grid grid-cols-4 gap-2">
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Price</p>
-              <p className="text-sm font-black text-indigo-600">KSH {product.price}</p>
+              <p className="text-sm font-black text-emerald-600">KSH {product.price}</p>
             </div>
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Views</p>
@@ -444,9 +444,9 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Age</p>
               <p className="text-sm font-black text-slate-700">2d</p>
             </div>
-            <div className={`p-3 rounded-2xl border text-center ${product.riskScore > 7 ? 'bg-rose-50 border-rose-100' : 'bg-indigo-50 border-indigo-100'}`}>
+            <div className={`p-3 rounded-2xl border text-center ${product.riskScore > 7 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Risk</p>
-              <p className={`text-sm font-black ${product.riskScore > 7 ? 'text-rose-600' : 'text-indigo-600'}`}>{product.riskScore}/10</p>
+              <p className={`text-sm font-black ${product.riskScore > 7 ? 'text-rose-600' : 'text-emerald-600'}`}>{product.riskScore}/10</p>
             </div>
           </div>
         </section>
@@ -481,7 +481,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
             <UserCheck size={80} />
           </div>
           <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Users size={14} className="text-indigo-400" /> Seller Trust Snapshot
+            <Users size={14} className="text-emerald-400" /> Seller Trust Snapshot
           </h5>
           <div className="flex items-center gap-4 mb-6">
             <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10">
@@ -504,7 +504,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
             <div>
               <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Verification</p>
               <div className="flex items-center gap-1.5 pt-0.5">
-                {seller?.isVerified ? <CheckCircle2 size={12} className="text-indigo-400" /> : <XCircle size={12} className="text-slate-500" />}
+                {seller?.isVerified ? <CheckCircle2 size={12} className="text-emerald-400" /> : <XCircle size={12} className="text-slate-500" />}
                 <span className="text-[10px] font-black uppercase tracking-tighter">{seller?.isVerified ? 'Verified' : 'Unlinked'}</span>
               </div>
             </div>
@@ -533,17 +533,17 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
 
         {/* 5. AI Analysis (Decision Assist) */}
         {product.aiAnalysis && (
-          <section className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 relative overflow-hidden">
+          <section className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <Zap size={60} />
             </div>
-            <h5 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-4">AI Copilot Analysis</h5>
-            <p className="text-sm text-indigo-900 leading-relaxed font-medium">
+            <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4">AI Copilot Analysis</h5>
+            <p className="text-sm text-emerald-900 leading-relaxed font-medium">
               {product.aiAnalysis.reasoning}
             </p>
-            <div className="mt-4 flex items-center gap-2 bg-indigo-600/5 p-3 rounded-xl border border-indigo-600/10">
-              <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest shrink-0">Suggested:</span>
-              <span className="text-[11px] font-black text-indigo-800 uppercase tracking-tighter">{product.aiAnalysis.suggestedAction}</span>
+            <div className="mt-4 flex items-center gap-2 bg-emerald-600/5 p-3 rounded-xl border border-emerald-600/10">
+              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest shrink-0">Suggested:</span>
+              <span className="text-[11px] font-black text-emerald-800 uppercase tracking-tighter">{product.aiAnalysis.suggestedAction}</span>
             </div>
           </section>
         )}
@@ -561,7 +561,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
                   {new Date(entry.timestamp).toLocaleDateString()} • {new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 <p className="text-xs text-slate-600 mt-1 font-bold">
-                  Changed <span className="text-indigo-600">{entry.field}</span> from <span className="line-through opacity-50">{entry.oldValue}</span> to <span className="text-slate-900">{entry.newValue}</span>
+                  Changed <span className="text-emerald-600">{entry.field}</span> from <span className="line-through opacity-50">{entry.oldValue}</span> to <span className="text-slate-900">{entry.newValue}</span>
                 </p>
               </div>
             ))}
@@ -589,7 +589,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
         <div className="flex gap-2">
           <button
             onClick={() => onModerated(product.id, 'WARNED')}
-            className="flex-1 px-4 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all"
+            className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all"
           >
             Warn Seller
           </button>
@@ -660,18 +660,18 @@ const RemovalReasonModal: React.FC<{ onClose: () => void; onSubmit: (reason: str
                 key={r.id}
                 onClick={() => setReason(r.id)}
                 className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${reason === r.id
-                  ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/10'
+                  ? 'bg-emerald-50 border-emerald-200 ring-2 ring-emerald-500/10'
                   : 'bg-slate-50 border-slate-100 hover:border-slate-200'
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-1.5 rounded-lg ${reason === r.id ? 'bg-indigo-600 text-white' : 'bg-white text-slate-400 shadow-sm'}`}>
+                  <div className={`p-1.5 rounded-lg ${reason === r.id ? 'bg-emerald-600 text-white' : 'bg-white text-slate-400 shadow-sm'}`}>
                     {r.icon}
                   </div>
-                  <span className={`text-sm font-bold ${reason === r.id ? 'text-indigo-900' : 'text-slate-600'}`}>{r.label}</span>
+                  <span className={`text-sm font-bold ${reason === r.id ? 'text-emerald-900' : 'text-slate-600'}`}>{r.label}</span>
                 </div>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${reason === r.id ? 'border-indigo-600' : 'border-slate-200'}`}>
-                  {reason === r.id && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full" />}
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${reason === r.id ? 'border-emerald-600' : 'border-slate-200'}`}>
+                  {reason === r.id && <div className="w-2.5 h-2.5 bg-emerald-600 rounded-full" />}
                 </div>
               </button>
             ))}
@@ -683,7 +683,7 @@ const RemovalReasonModal: React.FC<{ onClose: () => void; onSubmit: (reason: str
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Add specifics for the audit trail..."
-              className="w-full h-24 bg-slate-50 border-none rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
+              className="w-full h-24 bg-slate-50 border-none rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-emerald-500 transition-all placeholder:text-slate-300"
             />
           </div>
         </div>

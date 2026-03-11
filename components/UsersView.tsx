@@ -17,9 +17,9 @@ const UsersView: React.FC = () => {
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [creatingAdmin, setCreatingAdmin] = useState(false);
     const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
-    const [newUserForm, setNewUserForm] = useState({ name: '', universityEmail: '', password: '', role: 'USER' as UserRole });
+    const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', role: 'USER' as UserRole });
     const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [editForm, setEditForm] = useState({ name: '', universityEmail: '' });
+    const [editForm, setEditForm] = useState({ name: '', email: '' });
     const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
     const [notifyMessage, setNotifyMessage] = useState('');
 
@@ -45,7 +45,7 @@ const UsersView: React.FC = () => {
             const res = await api.createUser(newUserForm);
             setUsers([res.user, ...users]);
             setIsAdminModalOpen(false);
-            setNewUserForm({ name: '', universityEmail: '', password: '', role: UserRole.USER });
+            setNewUserForm({ name: '', email: '', password: '', role: UserRole.USER });
             success('User Created', `${res.user.name} has been added successfully.`);
         } catch (err: any) {
             error('Creation Failed', err.message);
@@ -58,8 +58,8 @@ const UsersView: React.FC = () => {
         if (!selectedUser) return;
         try {
             const res = await api.updateUserData(selectedUser.id, editForm);
-            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, name: res.user.name, universityEmail: res.user.universityEmail } : u));
-            setSelectedUser({ ...selectedUser, name: res.user.name, universityEmail: res.user.universityEmail });
+            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, name: res.user.name, email: res.user.email } : u));
+            setSelectedUser({ ...selectedUser, name: res.user.name, email: res.user.email });
             setIsEditingProfile(false);
             success('Profile Updated', 'User data saved.');
         } catch (err: any) {
@@ -114,7 +114,7 @@ const UsersView: React.FC = () => {
         // Search
         if (search) {
             const s = search.toLowerCase();
-            result = result.filter(u => u.name.toLowerCase().includes(s) || u.universityEmail.toLowerCase().includes(s));
+            result = result.filter(u => u.name.toLowerCase().includes(s) || u.email.toLowerCase().includes(s));
         }
 
         // Sort
@@ -238,7 +238,7 @@ const UsersView: React.FC = () => {
                                             </div>
                                             <div>
                                                 <div className="font-bold text-slate-800 text-sm">{user.name}</div>
-                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{user.universityEmail}</div>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{user.email}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -313,7 +313,7 @@ const UsersView: React.FC = () => {
                                 {!isEditingProfile ? (
                                     <button 
                                         onClick={() => {
-                                            setEditForm({ name: selectedUser.name, universityEmail: selectedUser.universityEmail });
+                                            setEditForm({ name: selectedUser.name, email: selectedUser.email });
                                             setIsEditingProfile(true);
                                         }}
                                         className="text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 hover:bg-emerald-100 transition-colors"
@@ -357,8 +357,8 @@ const UsersView: React.FC = () => {
                                             />
                                             <input 
                                                 type="email" 
-                                                value={editForm.universityEmail} 
-                                                onChange={e => setEditForm({ ...editForm, universityEmail: e.target.value })} 
+                                                value={editForm.email} 
+                                                onChange={e => setEditForm({ ...editForm, email: e.target.value })} 
                                                 className="w-full text-sm font-medium text-slate-600 border-b border-slate-300 focus:border-emerald-500 outline-none pb-1 bg-transparent" 
                                             />
                                         </div>
@@ -366,7 +366,7 @@ const UsersView: React.FC = () => {
                                         <>
                                             <h4 className="text-2xl font-extrabold text-slate-900 tracking-tight">{selectedUser.name}</h4>
                                             <p className="text-slate-500 font-medium flex items-center gap-1.5 mt-1 text-sm">
-                                                <Mail size={14} /> {selectedUser.universityEmail}
+                                                <Mail size={14} /> {selectedUser.email}
                                             </p>
                                         </>
                                     )}
@@ -545,26 +545,75 @@ const UsersView: React.FC = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={() => {/* Logic to promote existing user or invite */ }}>
+                        <form onSubmit={handleCreateUser}>
                             <div className="p-6 space-y-4">
-                                <p className="text-sm text-slate-600">
-                                    Search for an existing user to promote them to an administrator role.
-                                </p>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">User Email</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newUserForm.name}
+                                        onChange={e => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        placeholder="Jane Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
                                     <input
                                         type="email"
                                         required
-                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                                        value={newUserForm.email}
+                                        onChange={e => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                         placeholder="jane.doe@egerton.ac.ke"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Temporary Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={newUserForm.password}
+                                        onChange={e => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Role</label>
+                                    <select
+                                        value={newUserForm.role}
+                                        onChange={e => setNewUserForm({ ...newUserForm, role: e.target.value as UserRole })}
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                    >
+                                        <option value="USER">Standard User</option>
+                                        <option value="ADMIN">System Administrator</option>
+                                    </select>
+                                </div>
 
-                                <div className="bg-emerald-50 p-3 rounded-lg flex items-start gap-3 mt-2">
+                                <div className="bg-emerald-50 p-3 rounded-xl flex items-start gap-3 mt-4">
                                     <ShieldCheck className="text-emerald-600 flex-shrink-0 mt-0.5" size={16} />
-                                    <p className="text-xs text-emerald-800 leading-relaxed">
-                                        Promoting a user to administrator gives them full access to all dashboard modules including User Management and Listings.
+                                    <p className="text-[11px] text-emerald-800 leading-relaxed font-medium">
+                                        Administrators have full read/write access to the dashboard. Use caution when granting elevated privileges.
                                     </p>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAdminModalOpen(false)}
+                                        className="flex-1 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={creatingAdmin}
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                                    >
+                                        {creatingAdmin ? <Loader2 className="animate-spin" size={18} /> : 'Create Account'}
+                                    </button>
                                 </div>
                             </div>
                         </form>

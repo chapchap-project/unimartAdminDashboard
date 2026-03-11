@@ -74,10 +74,10 @@ class ApiService {
   }
 
   // --- Auth ---
-  async login(universityEmail: string, password: string): Promise<{ user: User; token: string }> {
+  async login(email: string, password: string): Promise<{ user: User; token: string }> {
     return await this.request('auth/login', {
       method: 'POST',
-      body: JSON.stringify({ universityEmail, password })
+      body: JSON.stringify({ email, password })
     });
   }
 
@@ -139,7 +139,7 @@ class ApiService {
     });
   }
 
-  async updateUserData(userId: string, data: { name: string, universityEmail: string }): Promise<{ message: string, user: User }> {
+  async updateUserData(userId: string, data: { name: string, email: string }): Promise<{ message: string, user: User }> {
     return await this.request<{ message: string, user: User }>(`admin/users/${userId}`, {
       method: 'PATCH',
       body: JSON.stringify(data)
@@ -194,6 +194,13 @@ class ApiService {
     await this.request(`admin/listings/${productId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status, reason, note })
+    });
+  }
+
+  async createProduct(data: any): Promise<{ message: string, listing: Product }> {
+    return await this.request<{ message: string, listing: Product }>('admin/listings', {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
   }
 

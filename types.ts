@@ -6,7 +6,7 @@ export enum UserRole {
 export interface User {
   id: string;
   name: string;
-  universityEmail: string;
+  email: string;
   role: UserRole;
   isVerified: boolean;
   riskScore: number; // 0-100
@@ -33,7 +33,7 @@ export enum ProductStatus {
 }
 
 export enum Category {
-  TEXTBOOKS = 'TEXTBOOKS',
+  SHOES = 'SHOES',
   FURNITURE = 'FURNITURE',
   ELECTRONICS = 'ELECTRONICS',
   CLOTHING = 'CLOTHING',
@@ -47,7 +47,7 @@ export interface Product {
   category: Category;
   price: number;
   location: string;
-  seller: { name: string; universityEmail: string; id: string };
+  seller: { name: string; email: string; id: string };
   status: ProductStatus | 'REMOVED' | 'HIDDEN' | 'PENDING';
   createdAt: string;
   views: number;
@@ -194,7 +194,7 @@ export interface Report {
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
   type: 'LISTING' | 'USER';
   createdAt: string;
-  reporter: { name: string; universityEmail: string; credibilityScore: number };
+  reporter: { name: string; email: string; credibilityScore: number };
   listing?: { title: string; id: string };
   reportedUser?: { name: string; id: string };
 }

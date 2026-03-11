@@ -7,7 +7,7 @@ import {
   Info, ExternalLink, Zap, Shield, Image as ImageIcon, History,
   UserCheck, ShieldCheck, Ban, MessageSquare, Star, ArrowRight
 } from 'lucide-react';
-import { analyzeListingForSafety } from '../services/geminiService';
+import { analyzeListingForSafety } from '../services/aiService';
 import { api } from '../services/api';
 import { useToast } from './Toast';
 
@@ -25,6 +25,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showReasonModal, setShowReasonModal] = useState<{ id: string | string[], status: ProductStatus } | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { success, error, toast } = useToast();
 
   // Advanced Filters
@@ -118,6 +119,17 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
     }
   };
 
+  const handleCreateListing = async (data: any) => {
+    try {
+      const res = await api.createProduct(data);
+      setProducts([res.listing, ...products]);
+      setIsAddModalOpen(false);
+      success('Listing Created', `${res.listing.title} has been added.`);
+    } catch (err: any) {
+      error('Creation Failed', err.message);
+    }
+  };
+
   if (loading) {
     return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
   }
@@ -152,6 +164,13 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                   Oldest
                 </button>
               </div>
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg hover:bg-emerald-700 shadow-md shadow-emerald-200 font-bold text-xs flex items-center gap-2 transition-all"
+              >
+                <ShoppingBag size={14} />
+                Add Listing
+              </button>
             </div>
           </div>
 
@@ -374,6 +393,15 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
         />
       )}
 
+      {/* Add Listing Modal */}
+      {isAddModalOpen && (
+        <AddListingModal
+          users={users}
+          onClose={() => setIsAddModalOpen(null as any)}
+          onSubmit={handleCreateListing}
+        />
+      )}
+
       {/* Removal Reason Modal */}
       {showReasonModal && (
         <RemovalReasonModal
@@ -489,7 +517,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
             </div>
             <div>
               <h6 className="font-black text-lg leading-none">{product.seller.name}</h6>
-              <p className="text-xs text-slate-400 mt-1">{product.seller.universityEmail}</p>
+              <p className="text-xs text-slate-400 mt-1">{product.seller.email}</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-6">
@@ -700,6 +728,150 @@ const RemovalReasonModal: React.FC<{ onClose: () => void; onSubmit: (reason: str
             className="flex-[2] py-4 bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-100 transition-all"
           >
             Confirm Removal
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: (data: any) => void }> = ({ users, onClose, onSubmit }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    category: Category.OTHER,
+    condition: 'NEW',
+    sellerId: '',
+    images: ['']
+  });
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 flex flex-col max-h-[90vh]">
+        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Add Manual Listing</h3>
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Direct Marketplace Injection</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <X size={24} className="text-slate-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Target Seller</label>
+              <select
+                required
+                value={formData.sellerId}
+                onChange={e => setFormData({ ...formData, sellerId: e.target.value })}
+                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">Select a student...</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
+              </select>
+            </div>
+
+            <div className="col-span-2">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Listing Title</label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Product name..."
+                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</label>
+              <select
+                value={formData.category}
+                onChange={e => setFormData({ ...formData, category: e.target.value as Category })}
+                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
+              >
+                {Object.values(Category).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Price (KSH)</label>
+              <input
+                type="number"
+                required
+                value={formData.price}
+                onChange={e => setFormData({ ...formData, price: e.target.value })}
+                placeholder="0.00"
+                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Product details..."
+              className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-emerald-500 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Image URLs (Optional)</label>
+            <div className="space-y-2">
+              {formData.images.map((url, i) => (
+                <div key={i} className="flex gap-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={e => {
+                      const newImages = [...formData.images];
+                      newImages[i] = e.target.value;
+                      setFormData({ ...formData, images: newImages });
+                    }}
+                    placeholder="https://..."
+                    className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-emerald-500"
+                  />
+                  {i === formData.images.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, images: [...formData.images, ''] })}
+                      className="p-2 bg-slate-100 text-slate-400 hover:bg-slate-200 rounded-xl transition-colors"
+                    >
+                      <Star size={18} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+          <button
+            onClick={onClose}
+            className="flex-1 py-4 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              if (!formData.title || !formData.price || !formData.sellerId) {
+                alert('Please fill in title, price, and seller.');
+                return;
+              }
+              onSubmit({
+                ...formData,
+                images: formData.images.filter(img => img.trim() !== '')
+              });
+            }}
+            className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-2"
+          >
+            <ShoppingBag size={18} /> Inject Listing
           </button>
         </div>
       </div>

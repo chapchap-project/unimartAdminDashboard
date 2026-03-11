@@ -193,7 +193,7 @@ const App: React.FC = () => {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-2">University Email</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-2">Email Address</label>
                 <div className="relative">
                   <input
                     type="email"

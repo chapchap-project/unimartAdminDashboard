@@ -49,7 +49,7 @@ const WalletView: React.FC = () => {
     }
   };
 
-  if (isLoading && !balance) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-96">
         <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>

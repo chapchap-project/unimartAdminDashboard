@@ -337,8 +337,7 @@ class ApiService {
 
   // --- Wallet Management ---
   async getWalletBalance(): Promise<WalletBalance> {
-    const response = await this.request<any>('admin/wallet/balance');
-    return response.data;
+    return await this.request<WalletBalance>('admin/wallet/balance');
   }
 
   async topupServiceWallet(amount: number, phoneNumber: string): Promise<{ success: boolean; message: string; checkoutRequestId?: string }> {

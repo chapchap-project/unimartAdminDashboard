@@ -69,7 +69,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
     fetchDashboardData(); // Refresh list
   };
 
-  if (loading || !metrics) {
+  if (loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">

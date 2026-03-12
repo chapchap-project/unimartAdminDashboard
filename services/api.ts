@@ -82,7 +82,8 @@ class ApiService {
   }
 
   async getProfile(): Promise<User> {
-    return await this.request<User>('profile');
+    const response = await this.request<any>('profile');
+    return response.data || response;
   }
 
   // --- Dashboard ---

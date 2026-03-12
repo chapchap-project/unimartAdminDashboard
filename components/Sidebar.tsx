@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState, User } from '../types';
-import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3, Wallet } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -18,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout 
     { id: 'TRANSACTIONS', label: 'Transactions', icon: CreditCard },
     { id: 'ANALYTICS', label: 'Analytics', icon: BarChart3 },
     { id: 'ANNOUNCEMENTS', label: 'Broadcasts', icon: Megaphone },
+    { id: 'WALLET', label: 'System Wallet', icon: Wallet },
   ];
 
   return (
@@ -109,7 +110,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout 
         </div>
         <div className="overflow-hidden">
           <p className="text-xs font-bold text-white truncate">{user?.name || 'Admin User'}</p>
-          <p className="text-[10px] text-slate-400 truncate">{user?.universityEmail || 'admin@egerton.ac.ke'}</p>
+          <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@egerton.ac.ke'}</p>
         </div>
       </div>
     </div>

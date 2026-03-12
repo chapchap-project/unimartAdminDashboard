@@ -11,6 +11,7 @@ import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';
 import SettingsView from './components/SettingsView';
 import LogsView from './components/LogsView';
+import WalletView from './components/WalletView';
 import CommandPalette from './components/CommandPalette';
 import { ViewState, User } from './types';
 import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X } from 'lucide-react';
@@ -165,6 +166,8 @@ const App: React.FC = () => {
         return <AnalyticsView />;
       case 'SETTINGS':
         return <SettingsView />;
+      case 'WALLET':
+        return <WalletView />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-slate-400">

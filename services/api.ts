@@ -1,4 +1,4 @@
-import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem } from '../types';
+import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance } from '../types';
 
 // Default URL for local Unimarket backend
 const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -333,6 +333,19 @@ class ApiService {
   // --- Analytics ---
   async getAnalytics(timeframe: Timeframe): Promise<AnalyticsData> {
     return await this.request<AnalyticsData>(`admin/analytics?timeframe=${timeframe}`);
+  }
+
+  // --- Wallet Management ---
+  async getWalletBalance(): Promise<WalletBalance> {
+    const response = await this.request<any>('admin/wallet/balance');
+    return response.data;
+  }
+
+  async topupServiceWallet(amount: number, phoneNumber: string): Promise<{ success: boolean; message: string; checkoutRequestId?: string }> {
+    return await this.request<any>('admin/wallet/topup', {
+      method: 'POST',
+      body: JSON.stringify({ amount, phoneNumber })
+    });
   }
 }
 

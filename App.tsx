@@ -38,6 +38,11 @@ const App: React.FC = () => {
       if (token) {
         try {
           const user = await api.getProfile();
+          if (user.role !== 'ADMIN') {
+            console.warn("Non-admin user attempted dashboard access");
+            handleLogout();
+            return;
+          }
           setCurrentUser(user);
           setIsAuthenticated(true);
         } catch (err) {
@@ -120,6 +125,11 @@ const App: React.FC = () => {
 
     try {
       const response = await api.login(email, password);
+      
+      if (response.user.role !== 'ADMIN') {
+        throw new Error('Access Denied: Administrator privileges are required for this dashboard.');
+      }
+
       api.setToken(response.token); // Persist token
       setCurrentUser(response.user);
       setIsAuthenticated(true);

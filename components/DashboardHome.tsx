@@ -69,12 +69,14 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
     fetchDashboardData(); // Refresh list
   };
 
-  if (loading) {
+  if (loading || !metrics) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <div className="text-center">
           <Loader2 className="animate-spin text-emerald-500 mx-auto mb-4" size={40} />
-          <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Synchronizing Intelligence...</p>
+          <p className="text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">
+            {loading ? "Synchronizing Intelligence..." : "Establishing Secure Connection..."}
+          </p>
         </div>
       </div>
     );

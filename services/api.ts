@@ -300,6 +300,12 @@ class ApiService {
     });
   }
 
+  async getNotificationTemplates(): Promise<{ templates: any[], categories: string[], count: number }> {
+    return await this.request('admin/notifications/templates', {
+      method: 'GET'
+    });
+  }
+
   // --- Audit Logs ---
   async getAuditLogs(): Promise<AuditLog[]> {
     return await this.request<AuditLog[]>('admin/audit-logs');

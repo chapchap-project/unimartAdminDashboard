@@ -286,6 +286,20 @@ class ApiService {
     });
   }
 
+  // --- User Notifications ---
+  async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: User[], currentPage: number, totalPages: number, totalItems: number }> {
+    return await this.request(`admin/users/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, {
+      method: 'GET'
+    });
+  }
+
+  async sendNotificationToUser(userId: string, data: { message: string, title?: string, type?: string, sendEmail?: boolean, emailSubject?: string }): Promise<{ message: string, notification: any, emailSent: boolean }> {
+    return await this.request(`admin/users/${userId}/notify`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
   // --- Audit Logs ---
   async getAuditLogs(): Promise<AuditLog[]> {
     return await this.request<AuditLog[]>('admin/audit-logs');

@@ -7,6 +7,7 @@ import ReportsView from './components/DisputesView';
 import TransactionsView from './components/TransactionsView';
 import AuditLogsView from './components/AuditLogsView';
 import AnnouncementsView from './components/AnnouncementsView';
+import NotificationsView from './components/NotificationsView';
 import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';
 import SettingsView from './components/SettingsView';
@@ -168,6 +169,8 @@ const App: React.FC = () => {
         return <AuditLogsView />;
       case 'ANNOUNCEMENTS':
         return <AnnouncementsView />;
+      case 'NOTIFICATIONS':
+        return <NotificationsView />;
       case 'SYSTEM_HEALTH':
         return <SystemHealthView />;
       case 'LOGS':

@@ -185,7 +185,7 @@ export interface AnalyticsData {
   revenueByCategory: { category: Category; revenue: number }[];
 }
 
-export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET';
+export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET';
 
 export interface WalletBalance {
   collection_balance: number;

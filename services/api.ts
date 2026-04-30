@@ -306,6 +306,16 @@ class ApiService {
     });
   }
 
+  async getNotificationAnalytics(period?: string, type?: string): Promise<any> {
+    const params = new URLSearchParams();
+    if (period) params.append('period', period);
+    if (type) params.append('type', type);
+
+    return await this.request(`admin/notifications/analytics?${params.toString()}`, {
+      method: 'GET'
+    });
+  }
+
   // --- Audit Logs ---
   async getAuditLogs(): Promise<AuditLog[]> {
     return await this.request<AuditLog[]>('admin/audit-logs');

@@ -7,6 +7,7 @@ import ReportsView from './components/DisputesView';
 import TransactionsView from './components/TransactionsView';
 import AuditLogsView from './components/AuditLogsView';
 import AnnouncementsView from './components/AnnouncementsView';
+import NotificationsView from './components/NotificationsView';
 import NotificationAnalyticsView from './components/NotificationAnalyticsView';
 import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';

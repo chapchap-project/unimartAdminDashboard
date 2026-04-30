@@ -316,6 +316,39 @@ class ApiService {
     });
   }
 
+  // --- Scheduled Notifications ---
+  async createScheduledNotification(data: {
+    title?: string;
+    message: string;
+    type?: string;
+    targetType: 'all' | 'university' | 'specific';
+    targetValue?: string;
+    userIds?: string[];
+    scheduledAt: string;
+    sendEmail?: boolean;
+    emailSubject?: string;
+  }): Promise<{ message: string; notification: any }> {
+    return await this.request('admin/notifications/scheduled', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getScheduledNotifications(status?: string, page = 1, limit = 20): Promise<{
+    notifications: any[];
+    total: number;
+    currentPage: number;
+    totalPages: number;
+  }> {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status) params.append('status', status);
+    return await this.request(`admin/notifications/scheduled?${params.toString()}`, { method: 'GET' });
+  }
+
+  async cancelScheduledNotification(id: string): Promise<{ message: string; notification: any }> {
+    return await this.request(`admin/notifications/scheduled/${id}`, { method: 'DELETE' });
+  }
+
   // --- Audit Logs ---
   async getAuditLogs(): Promise<AuditLog[]> {
     return await this.request<AuditLog[]>('admin/audit-logs');

@@ -9,6 +9,7 @@ import AuditLogsView from './components/AuditLogsView';
 import AnnouncementsView from './components/AnnouncementsView';
 import NotificationsView from './components/NotificationsView';
 import NotificationAnalyticsView from './components/NotificationAnalyticsView';
+import ScheduledNotificationsView from './components/ScheduledNotificationsView';
 import SystemHealthView from './components/SystemHealthView';
 import AnalyticsView from './components/AnalyticsView';
 import SettingsView from './components/SettingsView';
@@ -174,6 +175,8 @@ const App: React.FC = () => {
         return <NotificationsView />;
       case 'NOTIFICATION_ANALYTICS':
         return <NotificationAnalyticsView />;
+      case 'SCHEDULED_NOTIFICATIONS':
+        return <ScheduledNotificationsView />;
       case 'SYSTEM_HEALTH':
         return <SystemHealthView />;
       case 'LOGS':

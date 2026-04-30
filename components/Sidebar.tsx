@@ -1,6 +1,6 @@
 import React from 'react';
 import { ViewState, User } from '../types';
-import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3, Wallet, Bell, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3, Wallet, Bell, TrendingUp, CalendarClock } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewState;
@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout 
     { id: 'ANALYTICS', label: 'Analytics', icon: BarChart3 },
     { id: 'ANNOUNCEMENTS', label: 'Broadcasts', icon: Megaphone },
     { id: 'NOTIFICATIONS', label: 'Send Notifications', icon: Bell },
+    { id: 'SCHEDULED_NOTIFICATIONS', label: 'Scheduled Notifications', icon: CalendarClock },
     { id: 'NOTIFICATION_ANALYTICS', label: 'Notification Analytics', icon: TrendingUp },
     { id: 'WALLET', label: 'System Wallet', icon: Wallet },
   ];

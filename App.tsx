@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DashboardHome from './components/DashboardHome';
 import ListingsView from './components/ListingsView';
@@ -17,11 +17,22 @@ import LogsView from './components/LogsView';
 import WalletView from './components/WalletView';
 import CommandPalette from './components/CommandPalette';
 import { ViewState, User } from './types';
-import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X } from 'lucide-react';
+import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck } from 'lucide-react';
 import { api } from './services/api';
 import { socketService } from './services/socketService';
 import { Report } from './types';
 import { ToastProvider } from './components/Toast';
+
+interface InboxItem {
+  id: string;
+  type: 'NEW_USER' | 'REPORT' | 'ALERT';
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: Date;
+  navigateTo?: ViewState;
+  data: any;
+}
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,7 +42,10 @@ const App: React.FC = () => {
   const [initialListingId, setInitialListingId] = useState<string | null>(null);
   const [initialReportId, setInitialReportId] = useState<string | null>(null);
   const [initialFraudOnly, setInitialFraudOnly] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT', data: any }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT' | 'NEW_USER', data: any }[]>([]);
+  const [inbox, setInbox] = useState<InboxItem[]>([]);
+  const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const inboxRef = useRef<HTMLDivElement>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
   // Check for existing token and fetch profile
@@ -68,34 +82,72 @@ const App: React.FC = () => {
     }
   };
 
+  // Close inbox when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (inboxRef.current && !inboxRef.current.contains(e.target as Node)) {
+        setIsInboxOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   // WebSocket Connection
   React.useEffect(() => {
     if (isAuthenticated) {
-      const socket = socketService.connect();
+      socketService.connect();
+
+      socketService.onNewUser((user: any) => {
+        const id = Math.random().toString(36).substring(7);
+        const item: InboxItem = {
+          id,
+          type: 'NEW_USER',
+          title: 'New User Registered',
+          message: `${user.name} joined from ${user.university}`,
+          isRead: false,
+          createdAt: new Date(),
+          navigateTo: 'USERS',
+          data: user,
+        };
+        setInbox(prev => [item, ...prev]);
+        setNotifications(prev => [{ id, message: item.message, type: 'NEW_USER', data: user }, ...prev]);
+        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 8000);
+      });
 
       socketService.onNewReport((report: Report) => {
         const id = Math.random().toString(36).substring(7);
-        setNotifications(prev => [{
+        const item: InboxItem = {
           id,
-          message: `New Report: ${report.reason}`,
           type: 'REPORT',
-          data: report
-        }, ...prev]);
-        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 10000);
+          title: 'New Report Filed',
+          message: `${report.reporter?.name ?? 'A user'} filed a report: ${report.reason}`,
+          isRead: false,
+          createdAt: new Date(),
+          navigateTo: 'REPORTS',
+          data: report,
+        };
+        setInbox(prev => [item, ...prev]);
+        setNotifications(prev => [{ id, message: item.message, type: 'REPORT', data: report }, ...prev]);
+        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 8000);
       });
 
       socketService.onNewAlert((alert: any) => {
         const id = Math.random().toString(36).substring(7);
-        // Push to API local state so it appears in Dashboard
         api.pushNewAlert(alert);
-
-        setNotifications(prev => [{
+        const item: InboxItem = {
           id,
-          message: alert.message,
           type: 'ALERT',
-          data: alert
-        }, ...prev]);
-        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 10000);
+          title: `${alert.type ?? 'System'} Alert`,
+          message: alert.message,
+          isRead: false,
+          createdAt: new Date(),
+          navigateTo: alert.actionView,
+          data: alert,
+        };
+        setInbox(prev => [item, ...prev]);
+        setNotifications(prev => [{ id, message: alert.message, type: 'ALERT', data: alert }, ...prev]);
+        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 8000);
       });
 
       return () => {
@@ -296,10 +348,97 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-6">
-              <button className="relative p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+              {/* Bell / Inbox */}
+              <div className="relative" ref={inboxRef}>
+                <button
+                  onClick={() => setIsInboxOpen(prev => !prev)}
+                  className="relative p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
+                >
+                  <Bell size={20} />
+                  {inbox.filter(i => !i.isRead).length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 border-2 border-white">
+                      {inbox.filter(i => !i.isRead).length > 9 ? '9+' : inbox.filter(i => !i.isRead).length}
+                    </span>
+                  )}
+                </button>
+
+                {isInboxOpen && (
+                  <div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+                    {/* Panel header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <Bell size={15} className="text-slate-600" />
+                        <span className="text-sm font-bold text-slate-800">Notifications</span>
+                        {inbox.filter(i => !i.isRead).length > 0 && (
+                          <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                            {inbox.filter(i => !i.isRead).length} new
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {inbox.some(i => !i.isRead) && (
+                          <button
+                            onClick={() => setInbox(prev => prev.map(i => ({ ...i, isRead: true })))}
+                            className="text-[11px] text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1"
+                          >
+                            <CheckCheck size={13} />
+                            Mark all read
+                          </button>
+                        )}
+                        {inbox.length > 0 && (
+                          <button
+                            onClick={() => setInbox([])}
+                            className="text-[11px] text-slate-400 hover:text-slate-600 font-semibold"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Items */}
+                    <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
+                      {inbox.length === 0 ? (
+                        <div className="py-12 text-center text-slate-400">
+                          <Bell size={28} className="mx-auto mb-2 opacity-30" />
+                          <p className="text-sm font-medium">No notifications yet</p>
+                          <p className="text-xs mt-1 opacity-70">New users and reports will appear here</p>
+                        </div>
+                      ) : (
+                        inbox.map(item => (
+                          <button
+                            key={item.id}
+                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 ${!item.isRead ? 'bg-emerald-50/40' : ''}`}
+                            onClick={() => {
+                              setInbox(prev => prev.map(i => i.id === item.id ? { ...i, isRead: true } : i));
+                              if (item.navigateTo) navigateToView(item.navigateTo);
+                              setIsInboxOpen(false);
+                            }}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                              item.type === 'NEW_USER' ? 'bg-emerald-100 text-emerald-600'
+                              : item.type === 'REPORT' ? 'bg-red-100 text-red-600'
+                              : 'bg-amber-100 text-amber-600'
+                            }`}>
+                              {item.type === 'NEW_USER' ? <UserPlus size={14} /> : item.type === 'REPORT' ? <Flag size={14} /> : <AlertCircle size={14} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
+                                {!item.isRead && <span className="w-2 h-2 bg-emerald-500 rounded-full flex-shrink-0" />}
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5 leading-snug line-clamp-2">{item.message}</p>
+                              <p className="text-[10px] text-slate-400 mt-1">
+                                {item.createdAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-700">{currentUser?.name || 'Admin User'}</p>
@@ -327,44 +466,50 @@ const App: React.FC = () => {
           </main>
         </div>
 
-        <div className="fixed bottom-6 right-6 z-[100] space-y-3 max-w-sm w-full">
-          {notifications.map((notif) => (
-            <div
-              key={notif.id}
-              className={`${notif.type === 'ALERT' && notif.data.severity === 'CRITICAL' ? 'bg-rose-950 border-rose-500 ring-2 ring-rose-500/20' : 'bg-slate-900 border-slate-700'} text-white p-4 rounded-xl shadow-2xl border flex items-start gap-4 animate-in slide-in-from-right-8 duration-300`}
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.type === 'ALERT' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-500'
+        <div className="fixed bottom-6 right-6 z-[100] space-y-3 max-w-sm w-full pointer-events-none">
+          {notifications.map((notif) => {
+            const isNewUser = notif.type === 'NEW_USER';
+            const isCritical = notif.type === 'ALERT' && notif.data?.severity === 'CRITICAL';
+            return (
+              <div
+                key={notif.id}
+                className={`pointer-events-auto ${isCritical ? 'bg-rose-950 border-rose-500 ring-2 ring-rose-500/20' : 'bg-slate-900 border-slate-700'} text-white p-4 rounded-xl shadow-2xl border flex items-start gap-4 animate-in slide-in-from-right-8 duration-300`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  isNewUser ? 'bg-emerald-500/20 text-emerald-400'
+                  : notif.type === 'ALERT' ? 'bg-amber-500/20 text-amber-400'
+                  : 'bg-red-500/20 text-red-400'
                 }`}>
-                {notif.type === 'ALERT' ? <Bell size={20} /> : <AlertCircle size={20} />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm">
-                  {notif.type === 'ALERT' ? `${notif.data.type} Alert` : 'New Moderation Report'}
-                </p>
-                <p className="text-slate-400 text-xs mt-1 leading-tight">{notif.message}</p>
+                  {isNewUser ? <UserPlus size={18} /> : notif.type === 'ALERT' ? <Bell size={18} /> : <AlertCircle size={18} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm">
+                    {isNewUser ? 'New User Registered'
+                      : notif.type === 'ALERT' ? `${notif.data?.type ?? 'System'} Alert`
+                      : 'New Moderation Report'}
+                  </p>
+                  <p className="text-slate-400 text-xs mt-1 leading-tight">{notif.message}</p>
+                  <button
+                    onClick={() => {
+                      if (isNewUser) navigateToView('USERS');
+                      else if (notif.type === 'ALERT' && notif.data?.actionView) navigateToView(notif.data.actionView);
+                      else navigateToView('REPORTS');
+                      setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                    }}
+                    className="mt-2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-widest"
+                  >
+                    {isNewUser ? 'View Users' : 'Investigate Now'}
+                  </button>
+                </div>
                 <button
-                  onClick={() => {
-                    if (notif.type === 'ALERT') {
-                      if (notif.data.actionView) setView(notif.data.actionView);
-                      // We don't have targetId handled universally in toasts yet but View change is enough for demo
-                    } else {
-                      setView('REPORTS');
-                    }
-                    setNotifications(prev => prev.filter(n => n.id !== notif.id));
-                  }}
-                  className="mt-2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-widest"
+                  onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
+                  className="text-slate-500 hover:text-white transition-colors"
                 >
-                  Investigate Now
+                  <X size={16} />
                 </button>
               </div>
-              <button
-                onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
-                className="text-slate-500 hover:text-white transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

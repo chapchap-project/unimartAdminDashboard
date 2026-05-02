@@ -32,6 +32,12 @@ class SocketService {
         }
     }
 
+    onNewUser(callback: (user: any) => void) {
+        if (this.socket) {
+            this.socket.on('new_user', callback);
+        }
+    }
+
     // Proactive Alert Simulator Disabled
     startProactiveSimulation() {
         // Disabled for production/real-backend mode

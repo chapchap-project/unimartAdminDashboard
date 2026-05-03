@@ -798,6 +798,22 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
             </div>
 
             <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Condition</label>
+              <select
+                required
+                value={formData.condition}
+                onChange={e => setFormData({ ...formData, condition: e.target.value })}
+                className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="NEW">New</option>
+                <option value="LIKE NEW">Like New</option>
+                <option value="GOOD">Good</option>
+                <option value="FAIR">Fair</option>
+                <option value="POOR">Poor</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Price (KSH)</label>
               <input
                 type="number"

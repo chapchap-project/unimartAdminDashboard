@@ -17,7 +17,7 @@ const UsersView: React.FC = () => {
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
     const [creatingAdmin, setCreatingAdmin] = useState(false);
     const [showSuspendConfirm, setShowSuspendConfirm] = useState(false);
-    const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', role: 'USER' as UserRole });
+    const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', role: 'USER' as UserRole, university: '' });
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [editForm, setEditForm] = useState({ name: '', email: '' });
     const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
@@ -45,7 +45,7 @@ const UsersView: React.FC = () => {
             const res = await api.createUser(newUserForm);
             setUsers([res.user, ...users]);
             setIsAdminModalOpen(false);
-            setNewUserForm({ name: '', email: '', password: '', role: UserRole.USER });
+            setNewUserForm({ name: '', email: '', password: '', role: UserRole.USER, university: '' });
             success('User Created', `${res.user.name} has been added successfully.`);
         } catch (err: any) {
             error('Creation Failed', err.message);
@@ -579,6 +579,21 @@ const UsersView: React.FC = () => {
                                         className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                                         placeholder="••••••••"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">University</label>
+                                    <select
+                                        required
+                                        value={newUserForm.university}
+                                        onChange={e => setNewUserForm({ ...newUserForm, university: e.target.value })}
+                                        className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                    >
+                                        <option value="">Select a university...</option>
+                                        <option value="Egerton University">Egerton University</option>
+                                        <option value="Pwani University">Pwani University</option>
+                                        <option value="Technical University of Mombasa">Technical University of Mombasa</option>
+                                        <option value="Mount Kenya University">Mount Kenya University</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Account Role</label>

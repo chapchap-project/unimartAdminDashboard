@@ -2,7 +2,7 @@ import { DashboardMetrics, Product } from "../types";
 
 const LS_KEY = 'unimart_openrouter_key';
 const LS_MODEL = 'unimart_ai_model';
-const DEFAULT_MODEL = 'google/gemini-2.0-flash-exp:free';
+const DEFAULT_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Read at call-time so Settings changes take effect immediately without a reload

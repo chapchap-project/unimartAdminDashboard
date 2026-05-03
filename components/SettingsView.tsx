@@ -53,12 +53,14 @@ const SettingsView: React.FC = () => {
     };
 
     const POPULAR_MODELS = [
+        { label: 'DeepSeek V3 (Free) — Recommended', value: 'deepseek/deepseek-chat-v3-0324:free' },
+        { label: 'DeepSeek R1 (Free) — Best reasoning', value: 'deepseek/deepseek-r1:free' },
+        { label: 'Gemini 2.5 Pro (Free)', value: 'google/gemini-2.5-pro-exp-03-25:free' },
         { label: 'Gemini 2.0 Flash (Free)', value: 'google/gemini-2.0-flash-exp:free' },
-        { label: 'Gemini 2.0 Flash Lite (Free)', value: 'google/gemini-2.0-flash-lite-001' },
+        { label: 'Llama 4 Maverick (Free)', value: 'meta-llama/llama-4-maverick:free' },
         { label: 'Llama 3.3 70B (Free)', value: 'meta-llama/llama-3.3-70b-instruct:free' },
-        { label: 'Mistral 7B (Free)', value: 'mistralai/mistral-7b-instruct:free' },
-        { label: 'GPT-4o Mini', value: 'openai/gpt-4o-mini' },
-        { label: 'Claude 3.5 Haiku', value: 'anthropic/claude-3-5-haiku' },
+        { label: 'Qwen3 235B (Free)', value: 'qwen/qwen3-235b-a22b:free' },
+        { label: 'Mistral Small 3.1 24B (Free)', value: 'mistralai/mistral-small-3.1-24b-instruct:free' },
     ];
 
     return (
@@ -200,7 +202,7 @@ const SettingsView: React.FC = () => {
                                     <option value={aiModel}>{aiModel} (custom)</option>
                                 )}
                             </select>
-                            <p className="text-xs text-slate-400 mt-1.5">Free models work well for insights and safety checks.</p>
+                            <p className="text-xs text-slate-400 mt-1.5">All listed models are free on OpenRouter — no usage costs.</p>
                         </div>
 
                         {/* Actions */}

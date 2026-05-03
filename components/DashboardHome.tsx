@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardMetrics, PriorityAlert, FraudQueueItem, ViewState } from '../types';
-import { Users, DollarSign, ShoppingBag, AlertTriangle, Sparkles, Loader2, ArrowUpRight, ArrowDownRight, X, ShieldAlert, ChevronRight, MessageSquare, ExternalLink, Flag, MoreVertical, Clock, ArrowUpCircle, CheckCircle2, History } from 'lucide-react';
+import { Users, DollarSign, ShoppingBag, AlertTriangle, Sparkles, Loader2, ArrowUpRight, ArrowDownRight, X, ShieldAlert, ChevronRight, MessageSquare, ExternalLink, Flag, MoreVertical, Clock, ArrowUpCircle, CheckCircle2, History, RefreshCw, Settings } from 'lucide-react';
 import { getDashboardInsights } from '../services/aiService';
 import { api } from '../services/api';
 import ReactMarkdown from 'react-markdown';
@@ -19,6 +19,20 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [snoozeModalId, setSnoozeModalId] = useState<string | null>(null);
 
+  const runInsight = async (m: DashboardMetrics) => {
+    setLoadingInsight(true);
+    try {
+      const summary = `Users: ${m.users}, Revenue: KSH ${m.totalRevenue}, Reports: ${m.openReports}, Flagged: ${m.flaggedListings}`;
+      const result = await getDashboardInsights(m, summary);
+      setInsight(result);
+    } catch (err) {
+      console.error('Failed to generate AI insight', err);
+      setInsight('__ERROR__');
+    } finally {
+      setLoadingInsight(false);
+    }
+  };
+
   const fetchDashboardData = async () => {
     try {
       const [m, a, f] = await Promise.all([
@@ -31,20 +45,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
       setFraudQueue(f);
       setLoading(false); // Reveal UI as soon as raw data is ready
 
-      // Run AI insights in background if metrics exist and we don't have an insight yet
+      // Run AI insights in background
       if (m && !insight) {
-        (async () => {
-          setLoadingInsight(true);
-          try {
-            const summary = `Users: ${m.users}, Revenue: KSH ${m.totalRevenue}, Reports: ${m.openReports}, Flagged: ${m.flaggedListings}`;
-            const result = await getDashboardInsights(m, summary);
-            setInsight(result);
-          } catch (err) {
-            console.error("Failed to generate AI insight", err);
-          } finally {
-            setLoadingInsight(false);
-          }
-        })();
+        runInsight(m);
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
@@ -232,39 +235,84 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
           </section>
 
           {/* Section D: AI Executive Summary */}
-          <section className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full"></div>
+          <section className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full" />
             <div className="relative">
               <div className="flex items-center justify-between mb-8">
                 <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                  <Sparkles size={12} className="text-emerald-400" />
                   AI Executive Intelligence Summary
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                  {!loadingInsight && insight && insight !== '__NO_KEY__' && insight !== '__ERROR__' && (
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  )}
                 </h4>
-                <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-slate-400">
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                <div className="flex items-center gap-2">
+                  {metrics && !loadingInsight && insight !== '__NO_KEY__' && (
+                    <button
+                      onClick={() => runInsight(metrics)}
+                      className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
+                      title="Regenerate insights"
+                    >
+                      <RefreshCw size={13} />
+                    </button>
+                  )}
+                  <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-slate-400">
+                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
               {loadingInsight ? (
                 <div className="space-y-4 py-4">
-                  <div className="h-4 bg-white/5 rounded-full w-3/4 animate-pulse"></div>
-                  <div className="h-4 bg-white/5 rounded-full w-full animate-pulse"></div>
-                  <div className="h-4 bg-white/5 rounded-full w-1/2 animate-pulse"></div>
+                  <div className="h-4 bg-white/5 rounded-full w-3/4 animate-pulse" />
+                  <div className="h-4 bg-white/5 rounded-full w-full animate-pulse" />
+                  <div className="h-4 bg-white/5 rounded-full w-2/3 animate-pulse" />
+                  <div className="h-4 bg-white/5 rounded-full w-1/2 animate-pulse" />
+                </div>
+              ) : insight === '__NO_KEY__' ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-4">
+                  <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
+                    <Sparkles size={22} className="text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-300">AI insights not configured</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
+                      Add your OpenRouter API key in Settings to enable executive summaries and listing safety analysis.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setView('SETTINGS')}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-slate-300 transition-colors"
+                  >
+                    <Settings size={13} /> Open Settings
+                  </button>
+                </div>
+              ) : insight === '__ERROR__' ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center gap-3">
+                  <p className="text-sm font-semibold text-rose-400">Failed to generate insights</p>
+                  <p className="text-xs text-slate-500">Check your API key and model in Settings, then try again.</p>
+                  {metrics && (
+                    <button
+                      onClick={() => runInsight(metrics)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold text-slate-300 transition-colors"
+                    >
+                      <RefreshCw size={13} /> Retry
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div className="prose prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {insight || "Awaiting intelligence processing..."}
+                      {insight || 'Awaiting intelligence processing…'}
                     </ReactMarkdown>
                   </div>
-
                   <div className="pt-6 border-t border-white/10 flex items-center gap-4">
                     <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
                       <Activity size={20} />
                     </div>
                     <p className="text-xs text-emerald-100/60 leading-relaxed font-medium">
-                      Insight derived from multi-vector analysis of platform metrics, fraud signals, and transaction velocity.
+                      Derived from multi-vector analysis of platform metrics, fraud signals, and transaction velocity.
                     </p>
                   </div>
                 </div>

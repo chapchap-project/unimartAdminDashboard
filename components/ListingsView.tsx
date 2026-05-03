@@ -67,6 +67,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
     }
   }, [initialListingId, products]);
 
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -430,6 +431,23 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
 
 // Side Panel Component
 const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: () => void; onModerated: (id: string, status: string, reason?: string) => void }> = ({ product, seller, onClose, onModerated }) => {
+  const [aiResult, setAiResult] = useState<{ riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'; reasoning: string; suggestedAction: string } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    if (product.aiAnalysis) return; // backend already provided analysis
+    let cancelled = false;
+    setAiResult(null);
+    setAiLoading(true);
+    analyzeListingForSafety(product)
+      .then(result => {
+        if (!cancelled) setAiResult({ riskLevel: result.riskLevel, reasoning: result.reasoning, suggestedAction: result.suggestedAction });
+      })
+      .catch(err => console.error('AI analysis error:', err))
+      .finally(() => { if (!cancelled) setAiLoading(false); });
+    return () => { cancelled = true; };
+  }, [product.id]);
+
   return (
     <div className="fixed inset-y-0 right-0 w-[450px] bg-white shadow-2xl border-l border-slate-200 z-[100] flex flex-col animate-in slide-in-from-right duration-300">
       {/* Panel Header */}
@@ -560,21 +578,48 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
         </section>
 
         {/* 5. AI Analysis (Decision Assist) */}
-        {product.aiAnalysis && (
-          <section className="bg-emerald-50 border border-emerald-100 rounded-3xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Zap size={60} />
-            </div>
-            <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-4">AI Copilot Analysis</h5>
-            <p className="text-sm text-emerald-900 leading-relaxed font-medium">
-              {product.aiAnalysis.reasoning}
-            </p>
-            <div className="mt-4 flex items-center gap-2 bg-emerald-600/5 p-3 rounded-xl border border-emerald-600/10">
-              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest shrink-0">Suggested:</span>
-              <span className="text-[11px] font-black text-emerald-800 uppercase tracking-tighter">{product.aiAnalysis.suggestedAction}</span>
-            </div>
-          </section>
-        )}
+        {(() => {
+          const analysis = product.aiAnalysis ?? aiResult;
+          const riskColor = analysis?.riskLevel === 'HIGH' ? 'rose' : analysis?.riskLevel === 'MEDIUM' ? 'amber' : 'emerald';
+          return (
+            <section className={`bg-${riskColor}-50 border border-${riskColor}-100 rounded-3xl p-6 relative overflow-hidden`}>
+              <div className="absolute top-0 right-0 p-4 opacity-5">
+                <Zap size={60} />
+              </div>
+              <div className="flex items-center justify-between mb-4">
+                <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">AI Copilot Analysis</h5>
+                {analysis?.riskLevel && (
+                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                    analysis.riskLevel === 'HIGH' ? 'bg-rose-500 text-white'
+                    : analysis.riskLevel === 'MEDIUM' ? 'bg-amber-500 text-white'
+                    : 'bg-emerald-500 text-white'
+                  }`}>
+                    {analysis.riskLevel} RISK
+                  </span>
+                )}
+              </div>
+              {aiLoading && !analysis ? (
+                <div className="space-y-2 py-2">
+                  <div className="h-3 bg-emerald-200/60 rounded-full w-full animate-pulse" />
+                  <div className="h-3 bg-emerald-200/60 rounded-full w-4/5 animate-pulse" />
+                  <div className="h-3 bg-emerald-200/60 rounded-full w-2/3 animate-pulse" />
+                </div>
+              ) : analysis ? (
+                <>
+                  <p className="text-sm text-emerald-900 leading-relaxed font-medium">
+                    {analysis.reasoning}
+                  </p>
+                  <div className="mt-4 flex items-center gap-2 bg-emerald-600/5 p-3 rounded-xl border border-emerald-600/10">
+                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest shrink-0">Suggested:</span>
+                    <span className="text-[11px] font-black text-emerald-800 uppercase tracking-tighter">{analysis.suggestedAction}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-emerald-700/60 italic">Configure OpenRouter API key in Settings to enable AI analysis.</p>
+              )}
+            </section>
+          );
+        })()}
 
         {/* 6. History Log */}
         <section>

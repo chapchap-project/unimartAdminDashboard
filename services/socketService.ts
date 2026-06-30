@@ -45,6 +45,12 @@ class SocketService {
         }
     }
 
+    onNewPendingListing(callback: (listing: any) => void) {
+        if (this.socket) {
+            this.socket.on('new_pending_listing', callback);
+        }
+    }
+
     // Proactive Alert Simulator Disabled
     startProactiveSimulation() {
         // Disabled for production/real-backend mode

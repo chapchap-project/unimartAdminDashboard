@@ -22,6 +22,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showReasonModal, setShowReasonModal] = useState<{ id: string | string[], status: ProductStatus } | null>(null);
@@ -40,6 +41,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
       try {
         const [pData, uData] = await Promise.all([api.getProducts(), api.getUsers()]);
         setProducts(pData.listings);
+        setPendingCount(pData.pendingCount ?? 0);
         setUsers(uData.users);
       } catch (e) {
         console.error("Failed to load listings data", e);
@@ -151,6 +153,17 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Pending Review quick-filter */}
+              {pendingCount > 0 && (
+                <button
+                  onClick={() => setStatusFilter('PENDING_REVIEW')}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${statusFilter === 'PENDING_REVIEW' ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-100' : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'}`}
+                >
+                  <Clock size={13} />
+                  Pending Review
+                  <span className="bg-orange-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                </button>
+              )}
               <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200">
                 <button
                   onClick={() => setDateSort('NEWEST')}
@@ -204,7 +217,8 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
-              <option value="PENDING_REVIEW">Pending</option>
+              <option value="PENDING_REVIEW">Pending Review</option>
+              <option value="REJECTED">Rejected</option>
               <option value="FLAGGED">Flagged</option>
               <option value="HIDDEN">Hidden</option>
               <option value="REMOVED">Removed</option>
@@ -343,15 +357,41 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                     </td>
                     <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-all">
-                          <MoreVertical size={16} />
-                        </button>
-                        <button
-                          onClick={() => setSelectedProduct(p)}
-                          className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
-                        >
-                          Audit
-                        </button>
+                        {p.status === 'PENDING_REVIEW' ? (
+                          <>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await api.updateProductStatus(p.id, ProductStatus.ACTIVE);
+                                  setProducts(prev => prev.map(x => x.id === p.id ? { ...x, status: ProductStatus.ACTIVE } : x));
+                                  setPendingCount(c => Math.max(0, c - 1));
+                                  success('Listing Approved', `"${p.title}" is now live.`);
+                                } catch { error('Failed', 'Could not approve listing.'); }
+                              }}
+                              className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-600 transition-all flex items-center gap-1"
+                            >
+                              <CheckCircle size={12} /> Approve
+                            </button>
+                            <button
+                              onClick={() => setShowReasonModal({ id: p.id, status: ProductStatus.REJECTED })}
+                              className="px-3 py-1.5 bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-rose-100 transition-all flex items-center gap-1"
+                            >
+                              <XCircle size={12} /> Reject
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-all">
+                              <MoreVertical size={16} />
+                            </button>
+                            <button
+                              onClick={() => setSelectedProduct(p)}
+                              className="px-4 py-1.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-600 transition-all shadow-lg shadow-slate-200"
+                            >
+                              Audit
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -378,15 +418,18 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
           seller={users.find(u => u.id === selectedProduct.seller.id)}
           onClose={() => setSelectedProduct(null)}
           onModerated={async (id, status, reason) => {
-            if (status === 'REMOVED' && !reason) {
-              setShowReasonModal({ id, status: ProductStatus.REMOVED });
+            if ((status === 'REMOVED' || status === 'REJECTED') && !reason) {
+              setShowReasonModal({ id, status: status as ProductStatus });
               return;
             }
             try {
               await api.updateProductStatus(id, status as ProductStatus, reason);
+              const wasApproved = status === 'ACTIVE';
+              const wasPending = products.find(p => p.id === id)?.status === 'PENDING_REVIEW';
               setProducts(prev => prev.map(p => p.id === id ? { ...p, status: status as any } : p));
+              if (wasPending) setPendingCount(c => Math.max(0, c - 1));
               setSelectedProduct(null);
-              success(`Listing Updated`, `Status changed to ${status}.`);
+              success(`Listing Updated`, wasApproved ? 'Listing is now live.' : `Status changed to ${status}.`);
             } catch (err) {
               error(`Update Failed`, `Could not update listing ${id}.`);
             }
@@ -403,24 +446,32 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
         />
       )}
 
-      {/* Removal Reason Modal */}
+      {/* Reason Modal — used for both Rejection and Removal */}
       {showReasonModal && (
         <RemovalReasonModal
+          isRejection={showReasonModal.status === ProductStatus.REJECTED}
           onClose={() => setShowReasonModal(null)}
           onSubmit={async (reason, note) => {
             const { id, status } = showReasonModal;
             const ids = Array.isArray(id) ? id : [id];
+            const isRejection = status === ProductStatus.REJECTED;
             try {
               for (const targetId of ids) {
                 await api.updateProductStatus(targetId, status, reason, note);
               }
+              const wasPending = ids.some(tid => products.find(p => p.id === tid)?.status === 'PENDING_REVIEW');
               setProducts(prev => prev.map(p => ids.includes(p.id) ? { ...p, status } : p));
+              if (wasPending) setPendingCount(c => Math.max(0, c - ids.length));
               setShowReasonModal(null);
               setSelectedProduct(null);
               setSelectedIds([]);
-              error(`Items Removed`, `${ids.length} listing(s) have been removed permanently.`);
+              if (isRejection) {
+                success(`Listing Rejected`, `${ids.length} listing(s) rejected. The seller has been notified.`);
+              } else {
+                error(`Items Removed`, `${ids.length} listing(s) have been removed permanently.`);
+              }
             } catch (err) {
-              error(`Removal Failed`, `Could not process the removal request.`);
+              error(isRejection ? `Rejection Failed` : `Removal Failed`, `Could not process the request.`);
             }
           }}
         />
@@ -645,40 +696,62 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
 
       {/* Sticky Actions Panel */}
       <div className="p-6 bg-white border-t border-slate-200 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.1)] space-y-4">
-        <div className="flex gap-2">
-          <button
-            onClick={() => onModerated(product.id, 'ACTIVE')}
-            className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2"
-          >
-            <CheckCircle size={18} /> Approve
-          </button>
-          <button
-            onClick={() => onModerated(product.id, 'HIDDEN')}
-            className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all"
-          >
-            Hide
-          </button>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onModerated(product.id, 'WARNED')}
-            className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all"
-          >
-            Warn Seller
-          </button>
-          <button
-            onClick={() => onModerated(product.id, 'ESCALATED')}
-            className="flex-1 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all"
-          >
-            Escalate
-          </button>
-          <button
-            onClick={() => onModerated(product.id, 'REMOVED')}
-            className="flex-1 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-1"
-          >
-            <Trash2 size={12} /> Remove
-          </button>
-        </div>
+        {product.status === 'PENDING_REVIEW' ? (
+          <>
+            <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest text-center">Awaiting Review — not yet visible to buyers</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onModerated(product.id, 'ACTIVE')}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle size={18} /> Approve & Go Live
+              </button>
+              <button
+                onClick={() => onModerated(product.id, 'REJECTED')}
+                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+              >
+                <XCircle size={18} /> Reject
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onModerated(product.id, 'ACTIVE')}
+                className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle size={18} /> Approve
+              </button>
+              <button
+                onClick={() => onModerated(product.id, 'HIDDEN')}
+                className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all"
+              >
+                Hide
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onModerated(product.id, 'WARNED')}
+                className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all"
+              >
+                Warn Seller
+              </button>
+              <button
+                onClick={() => onModerated(product.id, 'ESCALATED')}
+                className="flex-1 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all"
+              >
+                Escalate
+              </button>
+              <button
+                onClick={() => onModerated(product.id, 'REMOVED')}
+                className="flex-1 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-1"
+              >
+                <Trash2 size={12} /> Remove
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -701,27 +774,42 @@ const SLABadge: React.FC<{ createdAt: string; riskScore: number }> = ({ createdA
   );
 };
 
-const RemovalReasonModal: React.FC<{ onClose: () => void; onSubmit: (reason: string, note: string) => void }> = ({ onClose, onSubmit }) => {
-  const [reason, setReason] = useState('FRAUD');
+const RemovalReasonModal: React.FC<{ isRejection?: boolean; onClose: () => void; onSubmit: (reason: string, note: string) => void }> = ({ isRejection, onClose, onSubmit }) => {
+  const [reason, setReason] = useState(isRejection ? 'POOR_QUALITY' : 'FRAUD');
   const [note, setNote] = useState('');
-  const reasons = [
+
+  const removalReasons = [
     { id: 'FRAUD', label: 'Potential Fraud', icon: <ShieldAlert size={14} /> },
     { id: 'PROHIBITED_ITEM', label: 'Prohibited Item', icon: <XCircle size={14} /> },
     { id: 'MISLEADING_CONTENT', label: 'Misleading Info', icon: <AlertTriangle size={14} /> },
     { id: 'SPAM', label: 'Spam / Repeated', icon: <Ban size={14} /> },
-    { id: 'OTHER', label: 'Other violation', icon: <MoreVertical size={14} /> }
+    { id: 'OTHER', label: 'Other violation', icon: <MoreVertical size={14} /> },
   ];
+
+  const rejectionReasons = [
+    { id: 'POOR_QUALITY', label: 'Poor image or description quality', icon: <ImageIcon size={14} /> },
+    { id: 'PROHIBITED_ITEM', label: 'Prohibited or restricted item', icon: <XCircle size={14} /> },
+    { id: 'MISLEADING_CONTENT', label: 'Misleading price or description', icon: <AlertTriangle size={14} /> },
+    { id: 'DUPLICATE', label: 'Duplicate listing', icon: <Ban size={14} /> },
+    { id: 'OTHER', label: 'Other — see note below', icon: <MoreVertical size={14} /> },
+  ];
+
+  const reasons = isRejection ? rejectionReasons : removalReasons;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
         <div className="p-8 pb-4">
-          <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-6 shadow-inner ring-4 ring-rose-50/50">
-            <Trash2 size={24} />
+          <div className={`w-12 h-12 ${isRejection ? 'bg-orange-50' : 'bg-rose-50'} rounded-2xl flex items-center justify-center ${isRejection ? 'text-orange-600' : 'text-rose-600'} mb-6 shadow-inner`}>
+            {isRejection ? <XCircle size={24} /> : <Trash2 size={24} />}
           </div>
-          <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Remove Listing</h3>
+          <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">
+            {isRejection ? 'Reject Listing' : 'Remove Listing'}
+          </h3>
           <p className="text-slate-500 mt-2 text-sm font-medium leading-relaxed">
-            Specify the platform policy violation to proceed with this enforcement action.
+            {isRejection
+              ? 'The seller will be notified with the reason so they can revise and resubmit.'
+              : 'Specify the platform policy violation to proceed with this enforcement action.'}
           </p>
         </div>
 
@@ -770,9 +858,9 @@ const RemovalReasonModal: React.FC<{ onClose: () => void; onSubmit: (reason: str
           </button>
           <button
             onClick={() => onSubmit(reason, note)}
-            className="flex-[2] py-4 bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-700 shadow-xl shadow-rose-100 transition-all"
+            className={`flex-[2] py-4 ${isRejection ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-100' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-100'} text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl transition-all`}
           >
-            Confirm Removal
+            {isRejection ? 'Reject & Notify Seller' : 'Confirm Removal'}
           </button>
         </div>
       </div>

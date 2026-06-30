@@ -185,19 +185,20 @@ class ApiService {
   }
 
   // --- Listings ---
-  async getProducts(page = 1, limit = 50): Promise<{ listings: Product[], totalItems: number, totalPages: number }> {
+  async getProducts(page = 1, limit = 50): Promise<{ listings: Product[], totalItems: number, totalPages: number, pendingCount: number }> {
     const response = await this.request<any>(`admin/listings?page=${page}&limit=${limit}`);
     return {
       listings: response.listings || [],
       totalItems: response.totalItems || 0,
-      totalPages: response.totalPages || 1
+      totalPages: response.totalPages || 1,
+      pendingCount: response.pendingCount ?? 0,
     };
   }
 
-  async updateProductStatus(productId: string, status: ProductStatus, reason?: string, note?: string): Promise<void> {
+  async updateProductStatus(productId: string, status: ProductStatus, rejectionReason?: string, note?: string): Promise<void> {
     await this.request(`admin/listings/${productId}/status`, {
       method: 'PATCH',
-      body: JSON.stringify({ status, reason, note })
+      body: JSON.stringify({ status, rejectionReason, note })
     });
   }
 

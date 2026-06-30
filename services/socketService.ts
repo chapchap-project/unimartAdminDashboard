@@ -38,6 +38,12 @@ class SocketService {
         }
     }
 
+    onNewSupportTicket(callback: (ticket: any) => void) {
+        if (this.socket) {
+            this.socket.on('new_support_ticket', callback);
+        }
+    }
+
     // Proactive Alert Simulator Disabled
     startProactiveSimulation() {
         // Disabled for production/real-backend mode

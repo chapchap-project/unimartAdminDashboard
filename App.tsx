@@ -18,7 +18,7 @@ import WalletView from './components/WalletView';
 import SupportView from './components/SupportView';
 import CommandPalette from './components/CommandPalette';
 import { ViewState, User, UserRole, MODERATOR_VIEWS } from './types';
-import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck } from 'lucide-react';
+import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck, Headphones } from 'lucide-react';
 import { api } from './services/api';
 import { socketService } from './services/socketService';
 import { Report } from './types';
@@ -26,7 +26,7 @@ import { ToastProvider } from './components/Toast';
 
 interface InboxItem {
   id: string;
-  type: 'NEW_USER' | 'REPORT' | 'ALERT';
+  type: 'NEW_USER' | 'REPORT' | 'ALERT' | 'SUPPORT_TICKET';
   title: string;
   message: string;
   isRead: boolean;
@@ -43,7 +43,7 @@ const App: React.FC = () => {
   const [initialListingId, setInitialListingId] = useState<string | null>(null);
   const [initialReportId, setInitialReportId] = useState<string | null>(null);
   const [initialFraudOnly, setInitialFraudOnly] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT' | 'NEW_USER', data: any }[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT' | 'NEW_USER' | 'SUPPORT_TICKET', data: any }[]>([]);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const inboxRef = useRef<HTMLDivElement>(null);
@@ -152,6 +152,24 @@ const App: React.FC = () => {
         };
         setInbox(prev => [item, ...prev]);
         setNotifications(prev => [{ id, message: alert.message, type: 'ALERT', data: alert }, ...prev]);
+        setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 8000);
+      });
+
+      socketService.onNewSupportTicket((ticket: any) => {
+        const id = Math.random().toString(36).substring(7);
+        const message = `${ticket.user?.name ?? 'A user'} submitted a support request: ${ticket.subject}`;
+        const item: InboxItem = {
+          id,
+          type: 'SUPPORT_TICKET',
+          title: 'New Support Ticket',
+          message,
+          isRead: false,
+          createdAt: new Date(),
+          navigateTo: 'SUPPORT',
+          data: ticket,
+        };
+        setInbox(prev => [item, ...prev]);
+        setNotifications(prev => [{ id, message, type: 'SUPPORT_TICKET', data: ticket }, ...prev]);
         setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 8000);
       });
 
@@ -426,9 +444,13 @@ const App: React.FC = () => {
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                               item.type === 'NEW_USER' ? 'bg-emerald-100 text-emerald-600'
                               : item.type === 'REPORT' ? 'bg-red-100 text-red-600'
+                              : item.type === 'SUPPORT_TICKET' ? 'bg-violet-100 text-violet-600'
                               : 'bg-amber-100 text-amber-600'
                             }`}>
-                              {item.type === 'NEW_USER' ? <UserPlus size={14} /> : item.type === 'REPORT' ? <Flag size={14} /> : <AlertCircle size={14} />}
+                              {item.type === 'NEW_USER' ? <UserPlus size={14} />
+                                : item.type === 'REPORT' ? <Flag size={14} />
+                                : item.type === 'SUPPORT_TICKET' ? <Headphones size={14} />
+                                : <AlertCircle size={14} />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
@@ -486,14 +508,19 @@ const App: React.FC = () => {
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
                   isNewUser ? 'bg-emerald-500/20 text-emerald-400'
                   : notif.type === 'ALERT' ? 'bg-amber-500/20 text-amber-400'
+                  : notif.type === 'SUPPORT_TICKET' ? 'bg-violet-500/20 text-violet-400'
                   : 'bg-red-500/20 text-red-400'
                 }`}>
-                  {isNewUser ? <UserPlus size={18} /> : notif.type === 'ALERT' ? <Bell size={18} /> : <AlertCircle size={18} />}
+                  {isNewUser ? <UserPlus size={18} />
+                    : notif.type === 'ALERT' ? <Bell size={18} />
+                    : notif.type === 'SUPPORT_TICKET' ? <Headphones size={18} />
+                    : <AlertCircle size={18} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm">
                     {isNewUser ? 'New User Registered'
                       : notif.type === 'ALERT' ? `${notif.data?.type ?? 'System'} Alert`
+                      : notif.type === 'SUPPORT_TICKET' ? 'New Support Ticket'
                       : 'New Moderation Report'}
                   </p>
                   <p className="text-slate-400 text-xs mt-1 leading-tight">{notif.message}</p>
@@ -501,12 +528,15 @@ const App: React.FC = () => {
                     onClick={() => {
                       if (isNewUser) navigateToView('USERS');
                       else if (notif.type === 'ALERT' && notif.data?.actionView) navigateToView(notif.data.actionView);
+                      else if (notif.type === 'SUPPORT_TICKET') navigateToView('SUPPORT');
                       else navigateToView('REPORTS');
                       setNotifications(prev => prev.filter(n => n.id !== notif.id));
                     }}
                     className="mt-2 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 uppercase tracking-widest"
                   >
-                    {isNewUser ? 'View Users' : 'Investigate Now'}
+                    {isNewUser ? 'View Users'
+                      : notif.type === 'SUPPORT_TICKET' ? 'View Ticket'
+                      : 'Investigate Now'}
                   </button>
                 </div>
                 <button

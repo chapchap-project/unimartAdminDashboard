@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Send, Bell, Mail, Search, Loader2, CheckCircle, AlertCircle, X, Copy, ChevronDown } from 'lucide-react';
 import { api } from '../services/api';
 import { User } from '../types';
+import { useToast } from './Toast';
 
 interface Template {
   id: string;
@@ -12,20 +13,17 @@ interface Template {
 }
 
 const NotificationsView: React.FC = () => {
+  const { success, error: toastError } = useToast();
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState('');
   const [title, setTitle] = useState('');
   const [sendViaEmail, setSendViaEmail] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  
-  // Templates state
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -33,33 +31,23 @@ const NotificationsView: React.FC = () => {
   const [showTemplates, setShowTemplates] = useState(false);
   const [filteredTemplates, setFilteredTemplates] = useState<Template[]>([]);
 
-  // Load templates on mount
   useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        const data = await api.getNotificationTemplates();
+    api.getNotificationTemplates()
+      .then(data => {
         setTemplates(data.templates);
         setCategories(data.categories);
         setFilteredTemplates(data.templates);
-      } catch (error) {
-        console.error('Error loading templates:', error);
-      } finally {
-        setTemplatesLoading(false);
-      }
-    };
-    loadTemplates();
+      })
+      .catch(console.error)
+      .finally(() => setTemplatesLoading(false));
   }, []);
 
-  // Filter templates by category
   useEffect(() => {
-    if (selectedCategory) {
-      setFilteredTemplates(templates.filter(t => t.category === selectedCategory));
-    } else {
-      setFilteredTemplates(templates);
-    }
+    setFilteredTemplates(
+      selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates
+    );
   }, [selectedCategory, templates]);
 
-  // Search users with debounce
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (searchQuery.trim().length > 0) {
@@ -67,8 +55,7 @@ const NotificationsView: React.FC = () => {
         try {
           const result = await api.searchUsers(searchQuery, 1, 10);
           setSearchResults(result.users);
-        } catch (error) {
-          console.error('Search error:', error);
+        } catch {
           setSearchResults([]);
         } finally {
           setSearching(false);
@@ -77,20 +64,13 @@ const NotificationsView: React.FC = () => {
         setSearchResults([]);
       }
     }, 300);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   const handleAddUser = (user: User) => {
-    if (!selectedUsers.find(u => u.id === user.id)) {
-      setSelectedUsers([...selectedUsers, user]);
-    }
+    if (!selectedUsers.find(u => u.id === user.id)) setSelectedUsers(prev => [...prev, user]);
     setSearchQuery('');
     setSearchResults([]);
-  };
-
-  const handleRemoveUser = (userId: string) => {
-    setSelectedUsers(selectedUsers.filter(u => u.id !== userId));
   };
 
   const handleSelectTemplate = (template: Template) => {
@@ -101,359 +81,280 @@ const NotificationsView: React.FC = () => {
     setShowTemplates(false);
   };
 
-  const handleCopyTemplate = (template: Template) => {
-    const templateText = `Title: ${template.title}\n\n${template.message}`;
-    navigator.clipboard.writeText(templateText);
-    alert('Template copied to clipboard!');
-  };
-
-  const handleSendNotifications = async () => {
-    if (!message.trim()) {
-      setErrorMessage('Message is required');
-      return;
-    }
-
-    if (selectedUsers.length === 0) {
-      setErrorMessage('Please select at least one user');
-      return;
-    }
-
+  const handleSend = async () => {
+    if (!message.trim() || selectedUsers.length === 0) return;
     setSending(true);
-    setSuccessMessage('');
-    setErrorMessage('');
-
     try {
-      const sendPromises = selectedUsers.map(user =>
-        api.sendNotificationToUser(user.id, {
-          message,
-          title: title || 'Notification from Admin',
-          type: 'system',
-          sendEmail: sendViaEmail,
-          emailSubject: emailSubject || title || 'Important Notification'
-        })
+      await Promise.all(
+        selectedUsers.map(user =>
+          api.sendNotificationToUser(user.id, {
+            message,
+            title: title || 'Notification from Admin',
+            type: 'system',
+            sendEmail: sendViaEmail,
+            emailSubject: emailSubject || title || 'Important Notification',
+          })
+        )
       );
-
-      await Promise.all(sendPromises);
-
-      setSuccessMessage(`✓ Notification sent to ${selectedUsers.length} user(s)${sendViaEmail ? ' via app and email' : ' via app'}`);
-      
-      // Reset form
+      success(
+        'Notifications Sent',
+        `Delivered to ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}${sendViaEmail ? ' via app and email' : ''}.`
+      );
       setMessage('');
       setTitle('');
       setSelectedUsers([]);
       setSendViaEmail(false);
       setEmailSubject('');
-
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
-    } catch (error) {
-      console.error('Error sending notifications:', error);
-      setErrorMessage('Failed to send notifications. Please try again.');
+    } catch {
+      toastError('Send Failed', 'Could not deliver notifications. Please try again.');
     } finally {
       setSending(false);
     }
   };
 
+  const canSend = !sending && selectedUsers.length > 0 && message.trim().length > 0;
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <Bell className="w-8 h-8 text-green-600" />
-        <h1 className="text-3xl font-bold text-gray-900">Send Notifications</h1>
+      <div>
+        <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Send Notifications</h2>
+        <p className="text-slate-500 mt-1">Push messages directly to individual users, with optional email delivery.</p>
       </div>
 
-      {/* Messages */}
-      {successMessage && (
-        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
-          <CheckCircle className="w-5 h-5 flex-shrink-0" />
-          <p>{successMessage}</p>
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p>{errorMessage}</p>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: User Selection and Message Composition */}
+        {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* User Search */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900">Select Recipients</h2>
-            
-            <div className="relative mb-4">
-              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500">
-                <Search className="w-5 h-5 text-gray-400" />
+
+          {/* Recipient search */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h3 className="font-bold text-slate-800 mb-4">Recipients</h3>
+
+            <div className="relative">
+              <div className="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2.5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search by name or email..."
+                  placeholder="Search by name or email…"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 outline-none text-sm"
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="flex-1 outline-none text-sm text-slate-700 placeholder:text-slate-400"
                 />
+                {searching && <Loader2 className="w-4 h-4 text-slate-400 animate-spin flex-shrink-0" />}
               </div>
 
-              {/* Search Results */}
-              {searchQuery && (
-                <div className="absolute z-10 top-full left-0 right-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {searching ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map(user => (
-                      <button
-                        key={user.id}
-                        onClick={() => handleAddUser(user)}
-                        disabled={selectedUsers.some(u => u.id === user.id)}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <p className="font-medium text-sm text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                      No users found
-                    </div>
-                  )}
+              {searchQuery && searchResults.length > 0 && (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
+                  {searchResults.map(user => (
+                    <button
+                      key={user.id}
+                      onClick={() => handleAddUser(user)}
+                      disabled={selectedUsers.some(u => u.id === user.id)}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-b-0 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <p className="font-semibold text-sm text-slate-800">{user.name}</p>
+                      <p className="text-xs text-slate-400">{user.email}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {searchQuery && !searching && searchResults.length === 0 && (
+                <div className="absolute z-20 top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl px-4 py-6 text-center text-sm text-slate-400">
+                  No users found for "{searchQuery}"
                 </div>
               )}
             </div>
 
-            {/* Selected Users */}
             {selectedUsers.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  Selected: {selectedUsers.length} user(s)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedUsers.map(user => (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-2 bg-white border border-green-300 rounded-full px-3 py-2"
+              <div className="mt-4 flex flex-wrap gap-2">
+                {selectedUsers.map(user => (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5"
+                  >
+                    <span className="text-sm font-medium text-emerald-800">{user.name}</span>
+                    <button
+                      onClick={() => setSelectedUsers(prev => prev.filter(u => u.id !== user.id))}
+                      className="text-emerald-400 hover:text-rose-500 transition-colors"
                     >
-                      <span className="text-sm font-medium text-gray-700">{user.name}</span>
-                      <button
-                        onClick={() => handleRemoveUser(user.id)}
-                        className="ml-1 hover:text-red-600 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Message Composition */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900">Compose Message</h2>
-
+          {/* Message composition */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h3 className="font-bold text-slate-800 mb-4">Message</h3>
             <div className="space-y-4">
-              {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title
-                </label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Title (optional)</label>
                 <input
                   type="text"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Notification title (optional)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="e.g. Account Update"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-sm text-slate-800 transition-all"
                 />
               </div>
-
-              {/* Message */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Message <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  Message <span className="text-rose-400">*</span>
                 </label>
                 <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Enter your notification message..."
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Type your notification message here…"
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm resize-none"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-sm text-slate-800 resize-none transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  {message.length} / 1000 characters
-                </p>
+                <p className="text-xs text-slate-400 mt-1 text-right">{message.length} / 1000</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Delivery Options and Templates */}
+        {/* Right column */}
         <div className="space-y-6">
-          {/* Templates Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Templates</h2>
-              <button
-                onClick={() => setShowTemplates(!showTemplates)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <ChevronDown className={`w-5 h-5 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
-              </button>
-            </div>
+
+          {/* Templates */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <button
+              onClick={() => setShowTemplates(v => !v)}
+              className="w-full flex items-center justify-between"
+            >
+              <h3 className="font-bold text-slate-800">Templates</h3>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+            </button>
 
             {showTemplates && (
-              <div className="space-y-3">
-                {/* Category Filter */}
-                <div>
-                  <label className="text-xs font-medium text-gray-600 block mb-2">Filter by Category</label>
-                  <select
-                    value={selectedCategory || ''}
-                    onChange={(e) => setSelectedCategory(e.target.value || null)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="mt-4 space-y-3">
+                <select
+                  value={selectedCategory || ''}
+                  onChange={e => setSelectedCategory(e.target.value || null)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 text-slate-700"
+                >
+                  <option value="">All categories</option>
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
 
-                {/* Templates List */}
-                <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+                <div className="space-y-2">
                   {templatesLoading ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
                     </div>
                   ) : filteredTemplates.length > 0 ? (
                     filteredTemplates.map(template => (
-                      <div key={template.id} className="border-b last:border-b-0 p-3 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <div className="flex-1">
-                            <p className="font-medium text-sm text-gray-900">{template.title}</p>
-                            <p className="text-xs text-gray-500">{template.category}</p>
+                      <div key={template.id} className="border border-slate-100 rounded-xl p-3 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm text-slate-800 truncate">{template.title}</p>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide">{template.category}</p>
                           </div>
                           <button
-                            onClick={() => handleCopyTemplate(template)}
-                            className="text-gray-400 hover:text-gray-600 p-1"
-                            title="Copy template"
+                            onClick={() => navigator.clipboard.writeText(`${template.title}\n\n${template.message}`)}
+                            className="text-slate-300 hover:text-slate-500 flex-shrink-0 p-1"
+                            title="Copy"
                           >
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2 mb-2">{template.message}</p>
+                        <p className="text-xs text-slate-500 line-clamp-2 mb-2">{template.message}</p>
                         <button
                           onClick={() => handleSelectTemplate(template)}
-                          className="w-full px-2 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-medium rounded transition-colors"
+                          className="w-full py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition-colors"
                         >
                           Use Template
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No templates in this category
-                    </div>
+                    <p className="text-sm text-slate-400 text-center py-4">No templates available</p>
                   )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Delivery Options */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900">Delivery Options</h2>
-
+          {/* Delivery options */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h3 className="font-bold text-slate-800 mb-4">Delivery</h3>
             <div className="space-y-3">
-              {/* App Notification */}
-              <div className="flex items-center p-3 border border-green-300 bg-green-50 rounded-lg">
-                <input
-                  type="checkbox"
-                  checked={true}
-                  disabled
-                  className="mr-3"
-                />
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                <Bell className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-sm text-gray-900">In-App Notification</p>
-                  <p className="text-xs text-gray-600">Always sent</p>
+                  <p className="text-sm font-semibold text-slate-800">In-App</p>
+                  <p className="text-xs text-slate-400">Always sent</p>
                 </div>
+                <CheckCircle className="w-4 h-4 text-emerald-500 ml-auto" />
               </div>
 
-              {/* Email */}
-              <div className="flex items-start">
+              <label className="flex items-start gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
-                  id="sendEmail"
                   checked={sendViaEmail}
-                  onChange={(e) => setSendViaEmail(e.target.checked)}
-                  className="mt-1 mr-3 cursor-pointer"
+                  onChange={e => setSendViaEmail(e.target.checked)}
+                  className="mt-0.5 accent-emerald-600"
                 />
-                <label htmlFor="sendEmail" className="flex-1 cursor-pointer">
-                  <p className="font-medium text-sm text-gray-900">Also Send via Email</p>
-                  <p className="text-xs text-gray-600">Users will receive an email notification</p>
-                </label>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                    <p className="text-sm font-semibold text-slate-800">Also Send via Email</p>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">User receives an email copy</p>
+                </div>
+              </label>
 
-              {/* Email Subject */}
               {sendViaEmail && (
-                <div className="ml-6 mt-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Subject
-                  </label>
+                <div className="pl-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email Subject</label>
                   <input
                     type="text"
                     value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
-                    placeholder={title || 'Notification from UniMart'}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 text-sm"
+                    onChange={e => setEmailSubject(e.target.value)}
+                    placeholder={title || 'Notification from Unimarket'}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 text-sm"
                   />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Summary */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Summary</h3>
-            <div className="space-y-2 text-sm">
+          {/* Summary + send */}
+          <div className="bg-slate-900 rounded-2xl p-5 text-white">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Summary</p>
+            <div className="space-y-2 text-sm mb-5">
               <div className="flex justify-between">
-                <span className="text-gray-600">Recipients:</span>
-                <span className="font-medium text-gray-900">{selectedUsers.length} user(s)</span>
+                <span className="text-slate-400">Recipients</span>
+                <span className="font-bold">{selectedUsers.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Delivery:</span>
-                <span className="font-medium text-gray-900">
-                  {sendViaEmail ? 'App + Email' : 'App Only'}
-                </span>
+                <span className="text-slate-400">Delivery</span>
+                <span className="font-bold">{sendViaEmail ? 'App + Email' : 'App only'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Message:</span>
-                <span className="font-medium text-gray-900">
-                  {message.length > 0 ? '✓' : '✗'}
+                <span className="text-slate-400">Message</span>
+                <span className={message.trim() ? 'text-emerald-400 font-bold' : 'text-slate-600'}>
+                  {message.trim() ? '✓ Ready' : 'Empty'}
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Send Button */}
-          <button
-            onClick={handleSendNotifications}
-            disabled={sending || selectedUsers.length === 0 || !message.trim()}
-            className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors"
-          >
-            {sending ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Send className="w-5 h-5" />
-                Send Notifications
-              </>
-            )}
-          </button>
+            <button
+              onClick={handleSend}
+              disabled={!canSend}
+              className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold py-3 rounded-xl transition-all"
+            >
+              {sending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+              ) : (
+                <><Send className="w-4 h-4" /> Send Now</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

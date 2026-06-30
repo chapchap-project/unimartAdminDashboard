@@ -5,8 +5,10 @@ import {
     Save, Server, Globe, CheckCircle, XCircle, RefreshCw, Key,
     Eye, EyeOff, Sparkles, Loader2, AlertCircle,
 } from 'lucide-react';
+import { useToast } from './Toast';
 
 const SettingsView: React.FC = () => {
+    const { success } = useToast();
     const [baseUrl, setBaseUrl] = useState(api.getBaseUrl());
     const [connectionStatus, setConnectionStatus] = useState<'IDLE' | 'TESTING' | 'SUCCESS' | 'FAILED'>('IDLE');
 
@@ -24,6 +26,7 @@ const SettingsView: React.FC = () => {
     const handleSaveAI = () => {
         setApiKey(openRouterKey);
         setModel(aiModel);
+        success('AI Settings Saved', 'Your OpenRouter key and model have been saved to this browser.');
     };
 
     const handleTestBackend = async () => {

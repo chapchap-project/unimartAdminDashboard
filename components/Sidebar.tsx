@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout,
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent py-2">
+      <nav className="flex-1 px-2 overflow-y-auto hide-scrollbar py-2">
         <SectionLabel label="Main" />
 
         <NavItem id="DASHBOARD" label="Dashboard" icon={LayoutDashboard} />

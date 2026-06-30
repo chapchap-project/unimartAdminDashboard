@@ -108,13 +108,53 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
 
     const handleDelete = async (userId: string) => {
         if (confirm('Are you sure you want to remove this user? This action cannot be undone.')) {
-            // Optimistic UI Update
             setUsers(users.filter(u => u.id !== userId));
             try {
                 await api.deleteUser(userId);
-            } catch (error) {
-                console.error("Failed to delete user", error);
+            } catch (err) {
+                console.error("Failed to delete user", err);
+                fetchUsers(currentPage);
             }
+        }
+    };
+
+    const handleStatusChange = async (newStatus: 'ACTIVE' | 'WARNED' | 'RESTRICTED' | 'SUSPENDED') => {
+        if (!selectedUser) return;
+        const previousStatus = selectedUser.status;
+
+        // Optimistic update
+        setSelectedUser({ ...selectedUser, status: newStatus });
+        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: newStatus } : u));
+
+        try {
+            await api.updateUserStatus(selectedUser.id, newStatus);
+            const actionMap: Record<string, string> = {
+                WARNED: 'WARN_USER',
+                RESTRICTED: 'RESTRICT_USER',
+                SUSPENDED: 'SUSPEND_USER',
+                ACTIVE: 'RESTORE_USER',
+            };
+            const messageMap: Record<string, string> = {
+                WARNED: `Issued official warning to ${selectedUser.name}.`,
+                RESTRICTED: `Restricted marketplace access for ${selectedUser.name}.`,
+                SUSPENDED: `Suspended account for ${selectedUser.name}.`,
+                ACTIVE: `Restored account for ${selectedUser.name}.`,
+            };
+            await api.createAuditLog(actionMap[newStatus], selectedUser.id, messageMap[newStatus]);
+            const toastMap: Record<string, { title: string; msg: string; type: 'success' | 'warning' | 'error' | 'info' }> = {
+                WARNED:     { title: 'Warning Issued',        msg: `${selectedUser.name} has been officially warned.`,           type: 'warning' },
+                RESTRICTED: { title: 'Access Restricted',     msg: `${selectedUser.name}'s marketplace access is now limited.`,  type: 'warning' },
+                SUSPENDED:  { title: 'Account Suspended',     msg: `${selectedUser.name} has been suspended from the platform.`, type: 'error' },
+                ACTIVE:     { title: 'Account Restored',      msg: `${selectedUser.name}'s account is now active again.`,        type: 'success' },
+            };
+            const t = toastMap[newStatus];
+            if (t.type === 'success') success(t.title, t.msg);
+            else toast(t.title, t.msg, t.type);
+        } catch (err: any) {
+            // Roll back optimistic update on failure
+            setSelectedUser({ ...selectedUser, status: previousStatus });
+            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: previousStatus } : u));
+            error('Action Failed', err.message || 'Could not update user status. Please try again.');
         }
     };
 
@@ -473,24 +513,32 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                             </div>
 
                             {/* Trust Stats Row */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Risk Rating</p>
-                                    <p className={`text-xl font-black ${selectedUser.riskScore > 70 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                                        {selectedUser.riskScore > 70 ? 'CRITICAL' : selectedUser.riskScore > 30 ? 'MEDIUM' : 'SECURE'}
-                                    </p>
+                            {(() => {
+                                const ageDays = Math.floor((Date.now() - new Date(selectedUser.createdAt).getTime()) / 86400000);
+                                const ageLabel = ageDays < 1 ? 'Today' : ageDays < 30 ? `${ageDays}d` : ageDays < 365 ? `${Math.floor(ageDays / 30)}mo` : `${(ageDays / 365).toFixed(1)}yr`;
+                                const statusPenalty = selectedUser.status === 'SUSPENDED' ? 50 : selectedUser.status === 'RESTRICTED' ? 20 : selectedUser.status === 'WARNED' ? 10 : 0;
+                                const reportPenalty = Math.min(selectedUser.reportCount * 8, 60);
+                                const integrity = Math.max(0, 100 - reportPenalty - statusPenalty);
+                                const integrityColor = integrity >= 70 ? 'text-emerald-600' : integrity >= 40 ? 'text-amber-500' : 'text-rose-600';
+                                return (
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Risk Rating</p>
+                                        <p className={`text-xl font-black ${selectedUser.riskScore > 70 ? 'text-rose-600' : selectedUser.riskScore > 30 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                                            {selectedUser.riskScore > 70 ? 'HIGH' : selectedUser.riskScore > 30 ? 'MEDIUM' : 'LOW'}
+                                        </p>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Age</p>
+                                        <p className="text-xl font-black text-slate-800">{ageLabel}</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Integrity</p>
+                                        <p className={`text-xl font-black ${integrityColor}`}>{integrity}%</p>
+                                    </div>
                                 </div>
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Account Age</p>
-                                    <p className="text-xl font-black text-slate-800">
-                                        {Math.floor((Date.now() - new Date(selectedUser.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365)) || 1} yr
-                                    </p>
-                                </div>
-                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Integrity</p>
-                                    <p className="text-xl font-black text-slate-800">{100 - selectedUser.reportCount * 2}%</p>
-                                </div>
-                            </div>
+                                );
+                            })()}
 
                             {/* Activity Section */}
                             <div className="space-y-4 pt-4">
@@ -539,83 +587,108 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                             {/* Account Actions */}
                             <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full"></div>
-                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Account Actions</h5>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account Actions</h5>
+                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                                        selectedUser.status === 'ACTIVE'     ? 'bg-emerald-500/20 text-emerald-400' :
+                                        selectedUser.status === 'WARNED'     ? 'bg-orange-500/20 text-orange-400' :
+                                        selectedUser.status === 'RESTRICTED' ? 'bg-amber-500/20 text-amber-400' :
+                                                                               'bg-rose-500/20 text-rose-400'
+                                    }`}>
+                                        {selectedUser.status}
+                                    </span>
+                                </div>
 
-                                <div className="space-y-4">
-                                    <button
-                                        onClick={() => {
-                                            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'WARNED' } : u));
-                                            setSelectedUser({ ...selectedUser, status: 'WARNED' });
-                                            api.updateUserStatus(selectedUser.id, 'WARNED');
-                                            api.createAuditLog('WARN_USER', selectedUser.id, `Issued official warning for community guidelines violation.`);
-                                            success('User Warned', `A warning has been issued to ${selectedUser.name}.`);
-                                        }}
-                                        className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3 text-left">
-                                            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500">
-                                                <AlertTriangle size={16} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold">Issue Warning</p>
-                                                <p className="text-[10px] text-slate-400">Flags the account for guidelines violation</p>
-                                            </div>
-                                        </div>
-                                        <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'RESTRICTED' } : u));
-                                            setSelectedUser({ ...selectedUser, status: 'RESTRICTED' });
-                                            api.updateUserStatus(selectedUser.id, 'RESTRICTED');
-                                            api.createAuditLog('RESTRICT_USER', selectedUser.id, `Restricted marketplace privileges due to suspicious activity.`);
-                                            toast('Access Restricted', `${selectedUser.name}'s marketplace privileges have been limited.`, 'warning');
-                                        }}
-                                        className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3 text-left">
-                                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500">
-                                                <ShieldAlert size={16} />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold">Restrict Marketplace Access</p>
-                                                <p className="text-[10px] text-slate-400">Blocks new listings and messages</p>
-                                            </div>
-                                        </div>
-                                        <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
-                                    </button>
-
-                                    {/* Suspend — admin only */}
-                                    {isModerator ? (
-                                        <div className="w-full flex items-center justify-between p-4 bg-slate-800/20 border border-slate-700/40 rounded-xl opacity-50 cursor-not-allowed">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500">
-                                                    <Ban size={16} />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-slate-500">Suspend Account</p>
-                                                    <p className="text-[10px] text-slate-600">Admin permission required</p>
-                                                </div>
-                                            </div>
-                                            <Lock size={14} className="text-slate-600" />
-                                        </div>
-                                    ) : (
+                                <div className="space-y-3">
+                                    {/* Restore — shown when account is not active */}
+                                    {selectedUser.status !== 'ACTIVE' && (
                                         <button
-                                            onClick={() => setShowSuspendConfirm(true)}
-                                            className="w-full flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-colors group"
+                                            onClick={() => handleStatusChange('ACTIVE')}
+                                            className="w-full flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition-colors group"
                                         >
                                             <div className="flex items-center gap-3 text-left">
-                                                <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
-                                                    <Ban size={16} />
+                                                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                                    <CheckCircle size={16} />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-rose-400">Suspend Account</p>
-                                                    <p className="text-[10px] text-rose-500/60 font-medium">Revokes all access immediately</p>
+                                                    <p className="text-sm font-bold text-emerald-400">Restore Account</p>
+                                                    <p className="text-[10px] text-slate-400">Remove all restrictions and restore full access</p>
                                                 </div>
                                             </div>
-                                            <X size={14} className="text-rose-900 rotate-45 group-hover:text-white transition-all" />
+                                            <CheckCircle size={14} className="text-emerald-700 group-hover:text-emerald-400 transition-all" />
                                         </button>
+                                    )}
+
+                                    {/* Warn — shown when active or restricted */}
+                                    {(selectedUser.status === 'ACTIVE' || selectedUser.status === 'RESTRICTED') && (
+                                        <button
+                                            onClick={() => handleStatusChange('WARNED')}
+                                            className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                        >
+                                            <div className="flex items-center gap-3 text-left">
+                                                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-500">
+                                                    <AlertTriangle size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold">Issue Warning</p>
+                                                    <p className="text-[10px] text-slate-400">Flags the account for a community guidelines violation</p>
+                                                </div>
+                                            </div>
+                                            <AlertTriangle size={14} className="text-slate-600 group-hover:text-orange-400 transition-all" />
+                                        </button>
+                                    )}
+
+                                    {/* Restrict — shown when active or warned */}
+                                    {(selectedUser.status === 'ACTIVE' || selectedUser.status === 'WARNED') && (
+                                        <button
+                                            onClick={() => handleStatusChange('RESTRICTED')}
+                                            className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                        >
+                                            <div className="flex items-center gap-3 text-left">
+                                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-500">
+                                                    <ShieldAlert size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold">Restrict Marketplace Access</p>
+                                                    <p className="text-[10px] text-slate-400">Blocks new listings and messages</p>
+                                                </div>
+                                            </div>
+                                            <ShieldAlert size={14} className="text-slate-600 group-hover:text-amber-400 transition-all" />
+                                        </button>
+                                    )}
+
+                                    {/* Suspend — shown when not already suspended; admin only */}
+                                    {selectedUser.status !== 'SUSPENDED' && (
+                                        isModerator ? (
+                                            <div className="w-full flex items-center justify-between p-4 bg-slate-800/20 border border-slate-700/40 rounded-xl opacity-50 cursor-not-allowed">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500">
+                                                        <Ban size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-500">Suspend Account</p>
+                                                        <p className="text-[10px] text-slate-600">Admin permission required</p>
+                                                    </div>
+                                                </div>
+                                                <Lock size={14} className="text-slate-600" />
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setShowSuspendConfirm(true)}
+                                                className="w-full flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
+                                                        <Ban size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-rose-400">Suspend Account</p>
+                                                        <p className="text-[10px] text-rose-500/60 font-medium">Revokes all platform access immediately</p>
+                                                    </div>
+                                                </div>
+                                                <Ban size={14} className="text-rose-900 group-hover:text-rose-400 transition-all" />
+                                            </button>
+                                        )
                                     )}
                                 </div>
 
@@ -831,12 +904,8 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                             <div className="mt-8 flex flex-col gap-3">
                                 <button
                                     onClick={() => {
-                                        setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'SUSPENDED' } : u));
-                                        setSelectedUser({ ...selectedUser, status: 'SUSPENDED' });
-                                        api.updateUserStatus(selectedUser.id, 'SUSPENDED');
-                                        api.createAuditLog('SUSPEND_USER', selectedUser.id, `Full account suspension for critical risk profile and/or fraud reports.`);
                                         setShowSuspendConfirm(false);
-                                        error('Account Suspended', `${selectedUser.name} has been banned from the platform.`);
+                                        handleStatusChange('SUSPENDED');
                                     }}
                                     className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 transition-all active:scale-95"
                                 >

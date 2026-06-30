@@ -16,7 +16,7 @@ import SettingsView from './components/SettingsView';
 import LogsView from './components/LogsView';
 import WalletView from './components/WalletView';
 import CommandPalette from './components/CommandPalette';
-import { ViewState, User } from './types';
+import { ViewState, User, UserRole, MODERATOR_VIEWS } from './types';
 import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck } from 'lucide-react';
 import { api } from './services/api';
 import { socketService } from './services/socketService';
@@ -55,8 +55,8 @@ const App: React.FC = () => {
       if (token) {
         try {
           const user = await api.getProfile();
-          if (user.role !== 'ADMIN') {
-            console.warn("Non-admin user attempted dashboard access");
+          if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+            console.warn("Non-staff user attempted dashboard access");
             handleLogout();
             return;
           }
@@ -71,7 +71,11 @@ const App: React.FC = () => {
     checkAuth();
   }, []);
 
+  const isModerator = currentUser?.role === UserRole.MODERATOR;
+
   const navigateToView = (view: ViewState, params?: { targetId?: string, fraudOnly?: boolean }) => {
+    // Silently redirect moderators away from admin-only views
+    if (isModerator && !MODERATOR_VIEWS.includes(view)) return;
     setView(view);
     if (params?.targetId) {
       if (view === 'LISTINGS') setInitialListingId(params.targetId);
@@ -181,8 +185,8 @@ const App: React.FC = () => {
     try {
       const response = await api.login(email, password);
       
-      if (response.user.role !== 'ADMIN') {
-        throw new Error('Access Denied: Administrator privileges are required for this dashboard.');
+      if (response.user.role !== 'ADMIN' && response.user.role !== 'MODERATOR') {
+        throw new Error('Access Denied: Staff privileges are required for this dashboard.');
       }
 
       api.setToken(response.token); // Persist token
@@ -214,7 +218,7 @@ const App: React.FC = () => {
           onClearFraud={() => setInitialFraudOnly(false)}
         />;
       case 'USERS':
-        return <UsersView />;
+        return <UsersView isModerator={isModerator} />;
       case 'REPORTS':
         return <ReportsView initialReportId={initialReportId} onClearInitial={() => setInitialReportId(null)} />;
       case 'TRANSACTIONS':
@@ -327,9 +331,9 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-        <Sidebar currentView={currentView} setView={setView} user={currentUser} onLogout={handleLogout} />
+        <Sidebar currentView={currentView} setView={navigateToView} user={currentUser} onLogout={handleLogout} isModerator={isModerator} />
 
-        <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
+        <div className="flex-1 ml-60 flex flex-col h-screen overflow-hidden">
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-30 shadow-sm">
             <div className="relative w-96 group cursor-pointer" onClick={() => setIsPaletteOpen(true)}>
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">

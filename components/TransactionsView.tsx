@@ -1,26 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction } from '../types';
-import { Search, Filter, Loader2, ArrowDownLeft, ArrowUpRight, DollarSign, Download, CreditCard, RefreshCw } from 'lucide-react';
+import { Search, Loader2, ArrowDownLeft, ArrowUpRight, DollarSign, CreditCard, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
+
+const PAGE_SIZE = 50;
 
 const TransactionsView: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const fetchTransactions = async (page = 1) => {
+    setLoading(true);
+    try {
+      const data = await api.getTransactions(page, PAGE_SIZE);
+      setTransactions(data.payments);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.totalItems);
+      setCurrentPage(page);
+    } catch (error) {
+      console.error("Failed to fetch transactions", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const data = await api.getTransactions();
-        setTransactions(data.payments);
-      } catch (error) {
-        console.error("Failed to fetch transactions", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTransactions();
+    fetchTransactions(1);
   }, []);
 
   const filteredTransactions = transactions.filter(t => {
@@ -46,13 +56,16 @@ const TransactionsView: React.FC = () => {
   }
 
   const totalVolume = transactions.filter(t => t.paymentStatus === 'SUCCESS').reduce((acc, t) => acc + t.amount, 0);
+  const successCount = transactions.filter(t => t.paymentStatus === 'SUCCESS').length;
+  const pendingCount = transactions.filter(t => t.paymentStatus === 'PENDING').length;
+  const failedCount = transactions.filter(t => t.paymentStatus === 'FAILED').length;
 
   return (
     <div className="space-y-6 pb-10 animate-fade-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Financial Transactions</h2>
-          <p className="text-slate-500 mt-1">Monitor payments, refunds, and platform activity.</p>
+          <p className="text-slate-500 mt-1">Monitor payments, refunds, and platform activity &middot; {totalItems.toLocaleString()} total</p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
@@ -69,31 +82,71 @@ const TransactionsView: React.FC = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Volume</p>
-            <h3 className="text-2xl font-bold text-slate-800 mt-1">KSH {totalVolume.toLocaleString()}</h3>
+            <h3 className="text-xl font-bold text-slate-800 mt-1">KSH {totalVolume.toLocaleString()}</h3>
           </div>
           <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
-            <DollarSign size={24} />
+            <DollarSign size={22} />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Successful</p>
+            <h3 className="text-xl font-bold text-emerald-700 mt-1">{successCount}</h3>
+          </div>
+          <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
+            <CheckCircle size={22} />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending</p>
+            <h3 className="text-xl font-bold text-amber-700 mt-1">{pendingCount}</h3>
+          </div>
+          <div className="p-3 bg-amber-50 rounded-lg text-amber-600">
+            <Clock size={22} />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Failed</p>
+            <h3 className="text-xl font-bold text-rose-700 mt-1">{failedCount}</h3>
+          </div>
+          <div className="p-3 bg-rose-50 rounded-lg text-rose-600">
+            <XCircle size={22} />
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        {/* Filter Tabs */}
-        <div className="flex border-b border-slate-100 px-6 overflow-x-auto">
-          {['ALL', 'SUCCESS', 'PENDING', 'FAILED', 'REFUNDED'].map((status) => (
+        {/* Filter Tabs with counts */}
+        <div className="flex border-b border-slate-100 px-4 overflow-x-auto gap-1">
+          {[
+            { status: 'ALL', label: 'All', count: transactions.length },
+            { status: 'SUCCESS', label: 'Successful', count: successCount },
+            { status: 'PENDING', label: 'Pending', count: pendingCount },
+            { status: 'FAILED', label: 'Failed', count: failedCount },
+            { status: 'REFUNDED', label: 'Refunded', count: transactions.filter(t => t.paymentStatus === 'REFUNDED').length },
+          ].map(({ status, label, count }) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-4 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${filter === status
+              className={`px-3 py-3.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${filter === status
                   ? 'border-emerald-600 text-emerald-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
             >
-              {status.charAt(0) + status.slice(1).toLowerCase()}
+              {label}
+              {count > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  filter === status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -141,6 +194,34 @@ const TransactionsView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-6 py-3 rounded-xl border border-slate-100 shadow-sm">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Page {currentPage} of {totalPages} &middot; {totalItems.toLocaleString()} transactions
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => fetchTransactions(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 text-slate-600 bg-slate-100 rounded-lg disabled:opacity-40 hover:bg-slate-200 transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 rounded-lg">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => fetchTransactions(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 text-slate-600 bg-slate-100 rounded-lg disabled:opacity-40 hover:bg-slate-200 transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

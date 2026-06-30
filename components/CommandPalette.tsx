@@ -50,19 +50,19 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
 
             // Real Search
             try {
-                const [users, products, reports] = await Promise.all([
+                const [usersData, productsData, reportsData] = await Promise.all([
                     api.getUsers(),
                     api.getProducts(),
                     api.getReports()
                 ]);
 
                 const q = query.toLowerCase();
-                const filteredUsers = users.filter(u => u.name.toLowerCase().includes(q) || u.universityEmail.toLowerCase().includes(q)).slice(0, 3);
-                const filteredProducts = products.filter(p => p.title.toLowerCase().includes(q)).slice(0, 3);
-                const filteredReports = reports.filter(r => r.reason.toLowerCase().includes(q)).slice(0, 3);
+                const filteredUsers = usersData.users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)).slice(0, 3);
+                const filteredProducts = productsData.listings.filter(p => p.title.toLowerCase().includes(q)).slice(0, 3);
+                const filteredReports = reportsData.reports.filter(r => r.reason.toLowerCase().includes(q)).slice(0, 3);
 
                 const newResults: any[] = [
-                    ...filteredUsers.map(u => ({ type: 'USER', id: u.id, title: u.name, subtitle: u.universityEmail, icon: User, data: u })),
+                    ...filteredUsers.map(u => ({ type: 'USER', id: u.id, title: u.name, subtitle: u.email, icon: User, data: u })),
                     ...filteredProducts.map(p => ({ type: 'LISTING', id: p.id, title: p.title, subtitle: `KSH ${p.price}`, icon: ShoppingBag, data: p })),
                     ...filteredReports.map(r => ({ type: 'REPORT', id: r.id, title: r.reason, subtitle: `By ${r.reporter.name}`, icon: AlertCircle, data: r }))
                 ];

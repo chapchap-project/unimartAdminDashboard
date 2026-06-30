@@ -1,5 +1,6 @@
 export enum UserRole {
   USER = 'USER',
+  MODERATOR = 'MODERATOR',
   ADMIN = 'ADMIN'
 }
 
@@ -186,6 +187,13 @@ export interface AnalyticsData {
 }
 
 export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'NOTIFICATION_ANALYTICS' | 'SCHEDULED_NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET';
+
+// Views accessible to moderators (subset of all views)
+export const MODERATOR_VIEWS: ViewState[] = [
+  'DASHBOARD', 'USERS', 'LISTINGS', 'REPORTS',
+  'TRANSACTIONS', 'ANALYTICS', 'NOTIFICATIONS',
+  'NOTIFICATION_ANALYTICS', 'AUDIT_LOGS', 'SYSTEM_HEALTH',
+];
 
 export interface WalletBalance {
   collection_balance: number;

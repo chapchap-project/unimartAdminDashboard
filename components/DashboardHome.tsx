@@ -96,69 +96,67 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
   return (
     <div className="space-y-8 animate-fade-in pb-10">
       {/* Header */}
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            Command Center
-            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded uppercase tracking-widest">v2.0 PROACTIVE</span>
-          </h2>
-          <p className="text-slate-500 font-medium">Platform Surveillance & Situational Intelligence</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h2>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+          </p>
         </div>
-        <div className="bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Live Monitoring Active</span>
+        <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-100 shadow-sm flex items-center gap-2">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-semibold text-slate-500">Live</span>
         </div>
       </div>
 
-      {/* Section A: KPI Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {kpis.map((kpi, idx) => (
-          <button
-            key={idx}
-            onClick={() => setView(kpi.view)}
-            className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all text-left group relative overflow-hidden"
-          >
-            <div className={`p-2 rounded-lg bg-${kpi.color}-50 text-${kpi.color}-600 w-fit mb-4 group-hover:scale-110 transition-transform`}>
-              <kpi.icon size={20} />
-            </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{kpi.title}</p>
-            <h3 className="text-xl font-black text-slate-800 mt-1">{kpi.value}</h3>
-
-            <div className={`mt-3 flex items-center gap-1 text-[10px] font-bold ${(kpi.inverseDelta ? kpi.delta < 0 : kpi.delta > 0) ? 'text-emerald-600' : 'text-rose-600'
-              }`}>
-              {kpi.delta > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-              {Math.abs(kpi.delta)}%
-            </div>
-          </button>
-        ))}
+      {/* KPI Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        {kpis.map((kpi, idx) => {
+          const isPositive = kpi.inverseDelta ? kpi.delta < 0 : kpi.delta > 0;
+          return (
+            <button
+              key={idx}
+              onClick={() => setView(kpi.view)}
+              className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all text-left group"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-1.5 rounded-lg bg-${kpi.color}-50 text-${kpi.color}-600`}>
+                  <kpi.icon size={16} />
+                </div>
+                <div className={`flex items-center gap-0.5 text-[11px] font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {kpi.delta > 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                  {Math.abs(kpi.delta)}%
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">{kpi.title}</p>
+              <h3 className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{kpi.value}</h3>
+              <p className="text-[10px] text-slate-400 mt-1">vs last 30 days</p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Alerts & AI Summary */}
         <div className="lg:col-span-7 space-y-8">
-          {/* Section B: Proactive Priority Alerts Panel */}
-          <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-fit">
-            <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
-                  <AlertTriangle size={16} />
-                </div>
-                <div>
-                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Active Surveillance Feed</h4>
-                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Real-time Intervention Required</p>
-                </div>
+          {/* Active Alerts */}
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-fit">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle size={16} className="text-amber-500" />
+                <h4 className="text-sm font-bold text-slate-800">Active Alerts</h4>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded">{alerts.length} Active</span>
-              </div>
+              <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg">
+                {alerts.length} {alerts.length === 1 ? 'alert' : 'alerts'}
+              </span>
             </div>
 
             <div className="divide-y divide-slate-50">
               {alerts.length === 0 ? (
-                <div className="p-12 text-center">
-                  <CheckCircle2 size={40} className="text-emerald-200 mx-auto mb-4" />
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Ecosystem Status Healthy</p>
-                  <p className="text-[10px] text-slate-300 mt-1">No critical intervention signals at this time.</p>
+                <div className="py-10 text-center">
+                  <CheckCircle2 size={32} className="text-emerald-300 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-slate-400">No active alerts</p>
+                  <p className="text-xs text-slate-300 mt-1">The platform is running normally.</p>
                 </div>
               ) : (
                 alerts.map((alert) => (
@@ -228,37 +226,34 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
               )}
             </div>
             {alerts.length > 0 && (
-              <div className="p-4 bg-slate-50/50 border-t border-slate-50 text-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Intervention stream synced to real-time events</p>
+              <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 text-center">
+                <p className="text-xs text-slate-400">Updates automatically every 30 seconds</p>
               </div>
             )}
           </section>
 
-          {/* Section D: AI Executive Summary */}
-          <section className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full" />
+          {/* AI Summary */}
+          <section className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full" />
             <div className="relative">
-              <div className="flex items-center justify-between mb-8">
-                <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] flex items-center gap-3">
-                  <Sparkles size={12} className="text-emerald-400" />
-                  AI Executive Intelligence Summary
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={15} className="text-emerald-400" />
+                  <h4 className="text-sm font-semibold text-white">AI Summary</h4>
                   {!loadingInsight && insight && insight !== '__NO_KEY__' && insight !== '__ERROR__' && (
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                   )}
-                </h4>
+                </div>
                 <div className="flex items-center gap-2">
                   {metrics && !loadingInsight && insight !== '__NO_KEY__' && (
                     <button
                       onClick={() => runInsight(metrics)}
                       className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-slate-300 transition-colors"
-                      title="Regenerate insights"
+                      title="Regenerate"
                     >
                       <RefreshCw size={13} />
                     </button>
                   )}
-                  <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-[10px] font-bold text-slate-400">
-                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </div>
                 </div>
               </div>
 
@@ -307,12 +302,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
                       {insight || 'Awaiting intelligence processing…'}
                     </ReactMarkdown>
                   </div>
-                  <div className="pt-6 border-t border-white/10 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
-                      <Activity size={20} />
-                    </div>
-                    <p className="text-xs text-emerald-100/60 leading-relaxed font-medium">
-                      Derived from multi-vector analysis of platform metrics, fraud signals, and transaction velocity.
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Based on current platform metrics, fraud signals, and transaction data.
                     </p>
                   </div>
                 </div>
@@ -321,20 +313,19 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
           </section>
         </div>
 
-        {/* Right Column: Fraud Queue Snapshot */}
+        {/* Right Column: Fraud Queue */}
         <div className="lg:col-span-5">
-          {/* Section C: Fraud Queue Snapshot */}
-          <section className="bg-white rounded-3xl border border-emerald-50 shadow-sm overflow-hidden flex flex-col h-full ring-1 ring-emerald-50/50">
-            <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                <ShieldAlert size={14} className="text-rose-500" />
-                Fraud Queue Snapshot
-              </h4>
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={15} className="text-rose-500" />
+                <h4 className="text-sm font-bold text-slate-800">Fraud Queue</h4>
+              </div>
               <button
                 onClick={() => setView('LISTINGS', { fraudOnly: true })}
-                className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1 hover:underline"
+                className="text-xs font-semibold text-emerald-600 flex items-center gap-1 hover:text-emerald-700"
               >
-                View Full Queue <ChevronRight size={12} />
+                View all <ChevronRight size={13} />
               </button>
             </div>
 
@@ -375,16 +366,16 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
               </table>
             </div>
 
-            <div className="p-6 bg-rose-50/30 border-t border-rose-100/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-500">
-                  <ShieldAlert size={16} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-rose-800 uppercase tracking-widest mb-0.5">Tactical Awareness</p>
-                  <p className="text-xs text-rose-600/70 font-medium leading-tight">These items represent active risk vectors detected in the current session.</p>
-                </div>
+            {fraudQueue.length === 0 && (
+              <div className="py-10 text-center text-slate-400">
+                <ShieldAlert size={28} className="mx-auto mb-2 opacity-20" />
+                <p className="text-sm font-medium">No items in fraud queue</p>
               </div>
+            )}
+            <div className="px-5 py-3 bg-rose-50/40 border-t border-rose-100/50 mt-auto">
+              <p className="text-xs text-rose-500 font-medium">
+                {fraudQueue.length > 0 ? `${fraudQueue.length} items flagged for review` : 'Queue is clear'}
+              </p>
             </div>
           </section>
         </div>

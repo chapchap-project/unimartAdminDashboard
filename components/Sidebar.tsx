@@ -1,120 +1,175 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState, User } from '../types';
-import { LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut, GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3, Wallet, Bell, TrendingUp, CalendarClock } from 'lucide-react';
+import {
+  LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut,
+  GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3,
+  Wallet, Bell, TrendingUp, CalendarClock, ChevronDown, ChevronRight,
+  Shield, Terminal
+} from 'lucide-react';
+import { api } from '../services/api';
 
 interface SidebarProps {
   currentView: ViewState;
   setView: (view: ViewState) => void;
   user: User | null;
   onLogout: () => void;
+  isModerator?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout }) => {
-  const menuItems = [
-    { id: 'DASHBOARD', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'USERS', label: 'User Management', icon: Users },
-    { id: 'LISTINGS', label: 'Listings', icon: ShoppingBag },
-    { id: 'REPORTS', label: 'Reports', icon: AlertCircle },
-    { id: 'TRANSACTIONS', label: 'Transactions', icon: CreditCard },
-    { id: 'ANALYTICS', label: 'Analytics', icon: BarChart3 },
-    { id: 'ANNOUNCEMENTS', label: 'Broadcasts', icon: Megaphone },
-    { id: 'NOTIFICATIONS', label: 'Send Notifications', icon: Bell },
-    { id: 'SCHEDULED_NOTIFICATIONS', label: 'Scheduled Notifications', icon: CalendarClock },
-    { id: 'NOTIFICATION_ANALYTICS', label: 'Notification Analytics', icon: TrendingUp },
-    { id: 'WALLET', label: 'System Wallet', icon: Wallet },
-  ];
+const NOTIFICATION_VIEWS: ViewState[] = ['ANNOUNCEMENTS', 'NOTIFICATIONS', 'SCHEDULED_NOTIFICATIONS', 'NOTIFICATION_ANALYTICS'];
+
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout, isModerator = false }) => {
+  const [notifExpanded, setNotifExpanded] = useState(NOTIFICATION_VIEWS.includes(currentView));
+  const [openReports, setOpenReports] = useState<number | null>(null);
+
+  // Fetch pending report count for the badge
+  useEffect(() => {
+    api.getReports(1, 1).then(data => {
+      const pending = data.reports.filter(r => r.status === 'PENDING').length;
+      // Use totalItems as proxy if available, fall back to filtered count
+      setOpenReports(data.totalItems > 0 ? data.totalItems : pending);
+    }).catch(() => {});
+  }, []);
+
+  // Auto-expand notifications group when a notification view is active
+  useEffect(() => {
+    if (NOTIFICATION_VIEWS.includes(currentView)) {
+      setNotifExpanded(true);
+    }
+  }, [currentView]);
+
+  const NavItem = ({
+    id,
+    label,
+    icon: Icon,
+    badge,
+    indent = false,
+  }: {
+    id: ViewState;
+    label: string;
+    icon: React.ElementType;
+    badge?: number;
+    indent?: boolean;
+  }) => {
+    const isActive = currentView === id;
+    return (
+      <button
+        onClick={() => setView(id)}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group relative ${
+          indent ? 'ml-4 pl-3 w-[calc(100%-16px)]' : ''
+        } ${
+          isActive
+            ? 'bg-emerald-600 text-white shadow-sm'
+            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        }`}
+      >
+        <Icon
+          size={indent ? 15 : 18}
+          className={`flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`}
+        />
+        <span className={`font-medium ${indent ? 'text-xs' : 'text-sm'} flex-1 text-left`}>{label}</span>
+        {badge != null && badge > 0 && (
+          <span className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center ${
+            isActive ? 'bg-white/20 text-white' : 'bg-rose-500 text-white'
+          }`}>
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+        {isActive && !indent && (
+          <div className="absolute right-2 w-1.5 h-1.5 bg-white/70 rounded-full" />
+        )}
+      </button>
+    );
+  };
+
+  const SectionLabel = ({ label }: { label: string }) => (
+    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.15em] px-3 pt-5 pb-1.5 select-none">
+      {label}
+    </p>
+  );
 
   return (
-    <div className="w-64 h-screen fixed left-0 top-0 flex flex-col z-50 transition-all duration-300 bg-slate-900 border-r border-slate-800">
-      {/* Brand Header */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/50">
-          <GraduationCap className="text-white" size={20} />
+    <div className="w-60 h-screen fixed left-0 top-0 flex flex-col z-50 bg-slate-900 border-r border-slate-800">
+      {/* Brand */}
+      <div className="px-4 py-5 flex items-center gap-3 border-b border-slate-800">
+        <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/50 flex-shrink-0">
+          <GraduationCap className="text-white" size={18} />
         </div>
-        <div>
-          <h1 className="text-white font-bold tracking-tight text-lg leading-tight">Unimarket</h1>
-          <p className="text-xs text-slate-400 font-medium">Admin Portal</p>
+        <div className="min-w-0">
+          <h1 className="text-white font-bold tracking-tight text-base leading-tight">Unimarket</h1>
+          <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded mt-0.5 ${
+            isModerator
+              ? 'bg-blue-500/20 text-blue-400'
+              : 'bg-emerald-500/20 text-emerald-400'
+          }`}>
+            {isModerator ? 'Moderator' : 'Admin'}
+          </span>
         </div>
       </div>
 
-      <div className="px-6 py-2">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Main Menu</p>
-      </div>
+      {/* Nav */}
+      <nav className="flex-1 px-2 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent py-2">
+        <SectionLabel label="Main" />
 
-      <nav className="flex-1 px-3 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = currentView === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setView(item.id as ViewState)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group relative ${isActive
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/30'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-            >
-              <Icon size={20} className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'} transition-colors`} />
-              <span className="font-medium text-sm">{item.label}</span>
-              {isActive && (
-                <div className="absolute right-2 w-1.5 h-1.5 bg-white rounded-full shadow-lg animate-pulse"></div>
-              )}
-            </button>
-          );
-        })}
+        <NavItem id="DASHBOARD" label="Dashboard" icon={LayoutDashboard} />
+        <NavItem id="USERS" label="Users" icon={Users} />
+        <NavItem id="LISTINGS" label="Listings" icon={ShoppingBag} />
+        <NavItem id="REPORTS" label="Reports" icon={AlertCircle} badge={openReports ?? undefined} />
+        <NavItem id="TRANSACTIONS" label="Transactions" icon={CreditCard} />
+        <NavItem id="ANALYTICS" label="Analytics" icon={BarChart3} />
+        {!isModerator && <NavItem id="WALLET" label="System Wallet" icon={Wallet} />}
+
+        <SectionLabel label="Notifications" />
+
+        {/* Collapsible Notifications Group */}
+        <button
+          onClick={() => setNotifExpanded(v => !v)}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group ${
+            NOTIFICATION_VIEWS.includes(currentView)
+              ? 'text-emerald-400'
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          }`}
+        >
+          <Bell size={18} className="flex-shrink-0" />
+          <span className="font-medium text-sm flex-1 text-left">Notifications</span>
+          {notifExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+
+        {notifExpanded && (
+          <div className="mt-0.5 space-y-0.5">
+            {!isModerator && <NavItem id="ANNOUNCEMENTS" label="Broadcasts" icon={Megaphone} indent />}
+            <NavItem id="NOTIFICATIONS" label="Send to Users" icon={Bell} indent />
+            {!isModerator && <NavItem id="SCHEDULED_NOTIFICATIONS" label="Scheduled" icon={CalendarClock} indent />}
+            <NavItem id="NOTIFICATION_ANALYTICS" label="Analytics" icon={TrendingUp} indent />
+          </div>
+        )}
+
+        <SectionLabel label="System" />
+
+        <NavItem id="AUDIT_LOGS" label="Audit Logs" icon={Shield} />
+        <NavItem id="SYSTEM_HEALTH" label="System Health" icon={Activity} />
+        {!isModerator && <NavItem id="LOGS" label="Server Logs" icon={Terminal} />}
+        {!isModerator && <NavItem id="SETTINGS" label="Settings" icon={Settings} />}
       </nav>
 
-      <div className="px-6 py-2">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System</p>
-      </div>
-
-      <div className="p-3 mb-4 space-y-1">
-        <button
-          onClick={() => setView('AUDIT_LOGS')}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'AUDIT_LOGS' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-        >
-          <FileText size={20} />
-          <span className="font-medium text-sm">Audit Logs</span>
-        </button>
-        <button
-          onClick={() => setView('SYSTEM_HEALTH')}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'SYSTEM_HEALTH' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-        >
-          <Activity size={20} />
-          <span className="font-medium text-sm">System Health</span>
-        </button>
-        <button
-          onClick={() => setView('LOGS')}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'LOGS' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-        >
-          <FileText size={20} />
-          <span className="font-medium text-sm">Backend Logs</span>
-        </button>
-        <button
-          onClick={() => setView('SETTINGS')}
-          className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${currentView === 'SETTINGS' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-        >
-          <Settings size={20} />
-          <span className="font-medium text-sm">Settings</span>
-        </button>
+      {/* User + Logout */}
+      <div className="p-3 border-t border-slate-800">
+        <div className="flex items-center gap-3 px-2 py-2 mb-1">
+          <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-black text-white uppercase flex-shrink-0">
+            {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-white truncate leading-tight">{user?.name || 'Admin'}</p>
+            <p className="text-[10px] text-slate-500 truncate">{user?.email || ''}</p>
+          </div>
+        </div>
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-3 text-red-400 hover:bg-red-900/20 hover:text-red-300 rounded-lg transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-rose-900/20 hover:text-rose-400 rounded-lg transition-colors text-sm font-medium"
         >
-          <LogOut size={20} />
-          <span className="font-medium text-sm">Logout</span>
+          <LogOut size={16} />
+          Sign out
         </button>
-      </div>
-
-      {/* Admin Profile Mini */}
-      <div className="mx-4 mb-6 p-3 bg-slate-800 rounded-xl flex items-center gap-3 border border-slate-700">
-        <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-xs font-bold text-white uppercase">
-          {user?.name?.split(' ').map(n => n[0]).join('') || 'AD'}
-        </div>
-        <div className="overflow-hidden">
-          <p className="text-xs font-bold text-white truncate">{user?.name || 'Admin User'}</p>
-          <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@egerton.ac.ke'}</p>
-        </div>
       </div>
     </div>
   );

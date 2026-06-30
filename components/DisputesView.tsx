@@ -109,7 +109,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="font-bold text-slate-800 text-sm">{report.reporter.name}</div>
-                                    <div className="text-xs text-slate-400">{report.reporter.universityEmail}</div>
+                                    <div className="text-xs text-slate-400">{report.reporter.email}</div>
                                 </td>
                                 <td className="px-6 py-4 text-sm font-medium text-slate-700 max-w-xs truncate">{report.reason}</td>
                                 <td className="px-6 py-4 text-sm text-slate-600">
@@ -165,7 +165,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                                 <div>
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reporter</h3>
                                     <p className="font-bold text-slate-800">{selectedReport.reporter.name}</p>
-                                    <p className="text-sm text-slate-500">{selectedReport.reporter.universityEmail}</p>
+                                    <p className="text-sm text-slate-500">{selectedReport.reporter.email}</p>
                                 </div>
                                 <div>
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target ({selectedReport.type})</h3>

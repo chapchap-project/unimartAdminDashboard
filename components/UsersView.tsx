@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter, Loader2, UserPlus, X, AlertTriangle, Users, ShoppingBag, CreditCard } from 'lucide-react';
+import { MoreVertical, Mail, ShieldCheck, ShieldAlert, Ban, CheckCircle, Trash2, Search, Filter, Loader2, UserPlus, X, AlertTriangle, Users, ShoppingBag, CreditCard, Lock } from 'lucide-react';
 import { api } from '../services/api';
 import { useToast } from './Toast';
 
-const UsersView: React.FC = () => {
+interface UsersViewProps {
+    isModerator?: boolean;
+}
+
+const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('ALL');
+    const [statusFilter, setStatusFilter] = useState('ALL');
     const [search, setSearch] = useState('');
     const [sortBy, setSortBy] = useState<'risk' | 'reports' | 'activity' | 'newest'>('newest');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const PAGE_SIZE = 50;
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const { success, error, toast } = useToast();
 
@@ -23,19 +32,24 @@ const UsersView: React.FC = () => {
     const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
     const [notifyMessage, setNotifyMessage] = useState('');
 
+    const fetchUsers = async (page = 1) => {
+        setLoading(true);
+        try {
+            const data = await api.getUsers(page, PAGE_SIZE);
+            setUsers(data.users);
+            setTotalPages(data.totalPages);
+            setTotalItems(data.totalItems);
+            setCurrentPage(page);
+        } catch (error) {
+            console.error("Failed to fetch users", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // Load users from API on mount
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const data = await api.getUsers();
-                setUsers(data.users);
-            } catch (error) {
-                console.error("Failed to fetch users", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUsers();
+        fetchUsers(1);
     }, []);
 
     const handleCreateUser = async (e: React.FormEvent) => {
@@ -47,6 +61,7 @@ const UsersView: React.FC = () => {
             setIsAdminModalOpen(false);
             setNewUserForm({ name: '', email: '', password: '', role: UserRole.USER, university: '' });
             success('User Created', `${res.user.name} has been added successfully.`);
+            fetchUsers(currentPage);
         } catch (err: any) {
             error('Creation Failed', err.message);
         } finally {
@@ -106,9 +121,14 @@ const UsersView: React.FC = () => {
     const getSortedUsers = () => {
         let result = [...users];
 
-        // Filter
+        // Filter by role
         if (filter !== 'ALL') {
             result = result.filter(u => u.role === filter);
+        }
+
+        // Filter by status
+        if (statusFilter !== 'ALL') {
+            result = result.filter(u => u.status === statusFilter);
         }
 
         // Search
@@ -140,8 +160,9 @@ const UsersView: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 tracking-tight">User Management</h2>
-                    <p className="text-slate-500 mt-1">Manage {users.length} registered students.</p>
+                    <p className="text-slate-500 mt-1">Manage {totalItems.toLocaleString()} registered students.</p>
                 </div>
+                {!isModerator && (
                 <div className="flex gap-2">
                     <button
                         onClick={() => setIsAdminModalOpen(true)}
@@ -151,11 +172,13 @@ const UsersView: React.FC = () => {
                         Add User
                     </button>
                 </div>
+                )}
             </div>
 
             {/* Filter & Sort Bar */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col xl:flex-row gap-4 justify-between items-center">
-                <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Role</span>
                     {['ALL', 'USER', 'ADMIN'].map((role) => (
                         <button
                             key={role}
@@ -168,7 +191,29 @@ const UsersView: React.FC = () => {
                             {role}
                         </button>
                     ))}
-                    <div className="w-px h-6 bg-slate-200 mx-2 hidden md:block"></div>
+                    <div className="w-px h-6 bg-slate-200 mx-2"></div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Status</span>
+                    {[
+                        { value: 'ALL', label: 'All', color: 'bg-slate-800 text-white' },
+                        { value: 'ACTIVE', label: 'Active', color: 'bg-emerald-600 text-white' },
+                        { value: 'WARNED', label: 'Warned', color: 'bg-orange-500 text-white' },
+                        { value: 'RESTRICTED', label: 'Restricted', color: 'bg-amber-600 text-white' },
+                        { value: 'SUSPENDED', label: 'Suspended', color: 'bg-rose-600 text-white' },
+                    ].map(({ value, label, color }) => (
+                        <button
+                            key={value}
+                            onClick={() => setStatusFilter(value)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${statusFilter === value
+                                ? `${color} shadow-md`
+                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex flex-col xl:flex-row gap-4 justify-between items-center">
+                <div className="flex flex-wrap gap-2 w-full xl:w-auto">
                     <div className="flex gap-2">
                         {(['risk', 'reports', 'activity', 'newest'] as const).map((s) => (
                             <button
@@ -193,6 +238,7 @@ const UsersView: React.FC = () => {
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-9 pr-4 py-2 bg-slate-50 border-slate-200 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                     />
+                </div>
                 </div>
             </div>
 
@@ -299,6 +345,43 @@ const UsersView: React.FC = () => {
                 </table>
             </div>
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between bg-white px-6 py-3 rounded-xl border border-slate-100 shadow-sm">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Page {currentPage} of {totalPages} &middot; {totalItems.toLocaleString()} users
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => fetchUsers(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 text-xs font-bold bg-slate-100 text-slate-600 rounded-lg disabled:opacity-40 hover:bg-slate-200 transition-colors"
+                        >
+                            Previous
+                        </button>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const page = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
+                            return (
+                                <button
+                                    key={page}
+                                    onClick={() => fetchUsers(page)}
+                                    className={`px-3 py-2 text-xs font-bold rounded-lg transition-colors ${page === currentPage ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        })}
+                        <button
+                            onClick={() => fetchUsers(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 text-xs font-bold bg-slate-100 text-slate-600 rounded-lg disabled:opacity-40 hover:bg-slate-200 transition-colors"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* User Profile Overlay */}
             {selectedUser && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}>
@@ -309,7 +392,7 @@ const UsersView: React.FC = () => {
                         {/* Header */}
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <h3 className="font-bold text-slate-800 text-lg">User Intelligence Profile</h3>
+                                <h3 className="font-bold text-slate-800 text-lg">User Details</h3>
                                 {!isEditingProfile ? (
                                     <button 
                                         onClick={() => {
@@ -405,8 +488,8 @@ const UsersView: React.FC = () => {
 
                             {/* Activity Section */}
                             <div className="space-y-4 pt-4">
-                                <h5 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-3">
-                                    Activity Intelligence
+                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-3">
+                                    Activity
                                     <div className="flex-1 h-px bg-slate-100"></div>
                                 </h5>
                                 <div className="grid grid-cols-2 gap-4">
@@ -447,10 +530,10 @@ const UsersView: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Moderation Actions Terminal */}
-                            <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden">
+                            {/* Account Actions */}
+                            <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full"></div>
-                                <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-6">Moderation Terminal</h5>
+                                <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Account Actions</h5>
 
                                 <div className="space-y-4">
                                     <button
@@ -458,8 +541,8 @@ const UsersView: React.FC = () => {
                                             setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'WARNED' } : u));
                                             setSelectedUser({ ...selectedUser, status: 'WARNED' });
                                             api.updateUserStatus(selectedUser.id, 'WARNED');
-                                            api.createAuditLog('WARN_USER', selectedUser.id, `Issued official warning notification for community guidelines violation.`);
-                                            success('User Warned', `An official warning has been sent to ${selectedUser.name}.`);
+                                            api.createAuditLog('WARN_USER', selectedUser.id, `Issued official warning for community guidelines violation.`);
+                                            success('User Warned', `A warning has been issued to ${selectedUser.name}.`);
                                         }}
                                         className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
                                     >
@@ -468,8 +551,8 @@ const UsersView: React.FC = () => {
                                                 <AlertTriangle size={16} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold">Issue Official Warning</p>
-                                                <p className="text-[10px] text-slate-400">Sends high-priority mail notification</p>
+                                                <p className="text-sm font-bold">Issue Warning</p>
+                                                <p className="text-[10px] text-slate-400">Flags the account for guidelines violation</p>
                                             </div>
                                         </div>
                                         <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
@@ -480,7 +563,7 @@ const UsersView: React.FC = () => {
                                             setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'RESTRICTED' } : u));
                                             setSelectedUser({ ...selectedUser, status: 'RESTRICTED' });
                                             api.updateUserStatus(selectedUser.id, 'RESTRICTED');
-                                            api.createAuditLog('RESTRICT_USER', selectedUser.id, `Revoked marketplace privileges due to suspicious activity detected.`);
+                                            api.createAuditLog('RESTRICT_USER', selectedUser.id, `Restricted marketplace privileges due to suspicious activity.`);
                                             toast('Access Restricted', `${selectedUser.name}'s marketplace privileges have been limited.`, 'warning');
                                         }}
                                         className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
@@ -490,38 +573,65 @@ const UsersView: React.FC = () => {
                                                 <ShieldAlert size={16} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold">Restrict Marketplace Privileges</p>
+                                                <p className="text-sm font-bold">Restrict Marketplace Access</p>
                                                 <p className="text-[10px] text-slate-400">Blocks new listings and messages</p>
                                             </div>
                                         </div>
                                         <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
                                     </button>
 
-                                    <button
-                                        onClick={() => setShowSuspendConfirm(true)}
-                                        className="w-full flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3 text-left">
-                                            <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
-                                                <Ban size={16} />
+                                    {/* Suspend — admin only */}
+                                    {isModerator ? (
+                                        <div className="w-full flex items-center justify-between p-4 bg-slate-800/20 border border-slate-700/40 rounded-xl opacity-50 cursor-not-allowed">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-500">
+                                                    <Ban size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-500">Suspend Account</p>
+                                                    <p className="text-[10px] text-slate-600">Admin permission required</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-rose-400">Full Account Suspension</p>
-                                                <p className="text-[10px] text-rose-500/60 font-medium">Revokes all access immediately</p>
-                                            </div>
+                                            <Lock size={14} className="text-slate-600" />
                                         </div>
-                                        <X size={14} className="text-rose-900 rotate-45 group-hover:text-white transition-all" />
-                                    </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => setShowSuspendConfirm(true)}
+                                            className="w-full flex items-center justify-between p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl hover:bg-rose-500/20 transition-colors group"
+                                        >
+                                            <div className="flex items-center gap-3 text-left">
+                                                <div className="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
+                                                    <Ban size={16} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-rose-400">Suspend Account</p>
+                                                    <p className="text-[10px] text-rose-500/60 font-medium">Revokes all access immediately</p>
+                                                </div>
+                                            </div>
+                                            <X size={14} className="text-rose-900 rotate-45 group-hover:text-white transition-all" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                            {!isModerator && (
                             <button
                                 onClick={() => handleDelete(selectedUser.id)}
                                 className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5"
                             >
-                                <Trash2 size={14} /> Purge Identity Data
+                                <Trash2 size={14} /> Delete Account
+                            </button>
+                            )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setIsNotifyModalOpen(true)}
+                                className="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                            >
+                                <Mail size={14} /> Notify
                             </button>
                             <button
                                 onClick={() => setSelectedUser(null)}
@@ -529,6 +639,7 @@ const UsersView: React.FC = () => {
                             >
                                 Close Profile
                             </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -646,7 +757,7 @@ const UsersView: React.FC = () => {
                             </div>
                             <h3 className="text-xl font-black text-slate-800">Suspend Account?</h3>
                             <p className="text-slate-500 mt-3 leading-relaxed text-sm">
-                                You are about to suspend **{selectedUser.name}**. This will hide all their active listings and revoke platform access immediately.
+                                This will suspend <strong>{selectedUser.name}</strong>'s account. Their active listings will be hidden and they won't be able to access the platform.
                             </p>
 
                             <div className="mt-8 flex flex-col gap-3">
@@ -671,11 +782,9 @@ const UsersView: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="bg-rose-50/50 p-4 border-t border-rose-100 flex items-center gap-3">
-                            <AlertTriangle className="text-rose-500 shrink-0" size={16} />
-                            <p className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">
-                                This action will be logged in the audit history.
-                            </p>
+                        <div className="bg-rose-50/50 px-6 py-3 border-t border-rose-100 flex items-center gap-2">
+                            <AlertTriangle className="text-rose-400 shrink-0" size={14} />
+                            <p className="text-xs text-rose-600">This action will be recorded in the audit log.</p>
                         </div>
                     </div>
                 </div>

@@ -6,7 +6,7 @@ import {
     CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
     ReferenceLine, LabelList,
 } from 'recharts';
-import { TrendingUp, ShieldAlert, BarChart3, Filter, Loader2, Target, Zap, Users2, Activity } from 'lucide-react';
+import { TrendingUp, ShieldAlert, BarChart3, Filter, Loader2, Users2, Activity } from 'lucide-react';
 
 const CATEGORY_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
 
@@ -97,10 +97,9 @@ const AnalyticsView: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">System Intelligence</h2>
-                    <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm">
-                        <Target size={14} className="text-emerald-500" />
-                        Monitoring behavioral patterns and conversion velocity.
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Analytics</h2>
+                    <p className="text-slate-500 mt-1 text-sm">
+                        User growth, revenue breakdown, and marketplace performance.
                     </p>
                 </div>
                 <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
@@ -188,12 +187,6 @@ const AnalyticsView: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
-                        <Zap size={15} className="text-emerald-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-emerald-900 leading-relaxed font-medium">
-                            Returning user activity accounts for 68% of sessions. Stickiness is increasing (+4% WOW).
-                        </p>
-                    </div>
                 </div>
 
                 {/* 2. Fraud Suppression */}
@@ -256,12 +249,14 @@ const AnalyticsView: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="mt-5 p-4 bg-rose-50 rounded-xl border border-rose-100 flex items-start gap-3">
-                        <ShieldAlert size={15} className="text-rose-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-rose-900 leading-relaxed font-medium">
-                            Spike detected on Nov 3. Correlates with "Electronics" bulk uploads. Recommend tightening heuristics.
-                        </p>
-                    </div>
+                    {avgFraud > 0 && (
+                      <div className="mt-5 p-3 bg-rose-50 rounded-xl border border-rose-100 flex items-center gap-2">
+                          <ShieldAlert size={14} className="text-rose-500 shrink-0" />
+                          <p className="text-xs text-rose-700 font-medium">
+                              Average fraud rate: <strong>{avgFraud}%</strong> over this period
+                          </p>
+                      </div>
+                    )}
                 </div>
 
                 {/* 3. Revenue Contribution */}
@@ -316,12 +311,6 @@ const AnalyticsView: React.FC = () => {
                         </ResponsiveContainer>
                     </div>
 
-                    <div className="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
-                        <TrendingUp size={15} className="text-emerald-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-emerald-900 leading-relaxed font-medium">
-                            "Textbooks" dominate revenue (42%). Electronics volume is high but average order value is lower than Furniture.
-                        </p>
-                    </div>
                 </div>
 
                 {/* 4. Marketplace Velocity (Funnel) */}
@@ -375,12 +364,6 @@ const AnalyticsView: React.FC = () => {
                         })}
                     </div>
 
-                    <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
-                        <Activity size={15} className="text-emerald-600 mt-0.5 shrink-0" />
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                            Significant dropout (46%) between Cart and Checkout. Potential friction in Payment Gateway or Shipping calculation.
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>

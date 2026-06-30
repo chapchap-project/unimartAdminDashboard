@@ -179,7 +179,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col gap-3">
                 <div className="flex flex-wrap gap-2 items-center">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">Role</span>
-                    {['ALL', 'USER', 'ADMIN'].map((role) => (
+                    {['ALL', 'USER', 'MODERATOR', 'ADMIN'].map((role) => (
                         <button
                             key={role}
                             onClick={() => setFilter(role)}
@@ -454,7 +454,13 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                         </>
                                     )}
                                     <div className="flex items-center gap-3 mt-4">
-                                        <div className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border border-emerald-100">
+                                        <div className={`px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-widest border ${
+                                            selectedUser.role === 'ADMIN'
+                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                : selectedUser.role === 'MODERATOR'
+                                                ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                                : 'bg-slate-50 text-slate-600 border-slate-100'
+                                        }`}>
                                             {selectedUser.role}
                                         </div>
                                         {selectedUser.isVerified && (
@@ -612,6 +618,61 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                         </button>
                                     )}
                                 </div>
+
+                                {/* Role Management — admin only */}
+                                {!isModerator && selectedUser.role !== 'ADMIN' && (
+                                <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden mt-4">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
+                                    <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Role Management</h5>
+                                    <div className="space-y-3">
+                                        {selectedUser.role === 'USER' ? (
+                                            <button
+                                                onClick={async () => {
+                                                    if (!confirm(`Promote ${selectedUser.name} to Moderator? They will gain access to the admin dashboard with limited permissions.`)) return;
+                                                    await handleRoleChange(selectedUser.id, UserRole.MODERATOR);
+                                                    setSelectedUser({ ...selectedUser, role: UserRole.MODERATOR });
+                                                    api.createAuditLog('UPDATE_USER_ROLE', selectedUser.id, `Promoted to MODERATOR`);
+                                                    success('Role Updated', `${selectedUser.name} is now a Moderator.`);
+                                                }}
+                                                className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                                        <ShieldCheck size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold">Promote to Moderator</p>
+                                                        <p className="text-[10px] text-slate-400">Grants dashboard access with limited permissions</p>
+                                                    </div>
+                                                </div>
+                                                <ShieldCheck size={14} className="text-slate-600 group-hover:text-blue-400 transition-all" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={async () => {
+                                                    if (!confirm(`Demote ${selectedUser.name} back to a regular User? They will lose all dashboard access.`)) return;
+                                                    await handleRoleChange(selectedUser.id, UserRole.USER);
+                                                    setSelectedUser({ ...selectedUser, role: UserRole.USER });
+                                                    api.createAuditLog('UPDATE_USER_ROLE', selectedUser.id, `Demoted to USER`);
+                                                    toast('Role Updated', `${selectedUser.name} has been demoted to User.`, 'warning');
+                                                }}
+                                                className="w-full flex items-center justify-between p-4 bg-slate-800/50 border border-slate-700 rounded-xl hover:bg-slate-800 transition-colors group"
+                                            >
+                                                <div className="flex items-center gap-3 text-left">
+                                                    <div className="w-8 h-8 rounded-lg bg-slate-600/40 flex items-center justify-center text-slate-400">
+                                                        <Users size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold">Remove Moderator Role</p>
+                                                        <p className="text-[10px] text-slate-400">Revokes dashboard access, returns to regular user</p>
+                                                    </div>
+                                                </div>
+                                                <X size={14} className="text-slate-600 rotate-45 group-hover:text-white transition-all" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                )}
                             </div>
                         </div>
 
@@ -714,14 +775,21 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                         className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                                     >
                                         <option value="USER">Standard User</option>
+                                        <option value="MODERATOR">Moderator</option>
                                         <option value="ADMIN">System Administrator</option>
                                     </select>
                                 </div>
 
-                                <div className="bg-emerald-50 p-3 rounded-xl flex items-start gap-3 mt-4">
-                                    <ShieldCheck className="text-emerald-600 flex-shrink-0 mt-0.5" size={16} />
-                                    <p className="text-[11px] text-emerald-800 leading-relaxed font-medium">
-                                        Administrators have full read/write access to the dashboard. Use caution when granting elevated privileges.
+                                <div className={`p-3 rounded-xl flex items-start gap-3 mt-4 ${
+                                    newUserForm.role === 'MODERATOR' ? 'bg-blue-50' : 'bg-emerald-50'
+                                }`}>
+                                    <ShieldCheck className={`flex-shrink-0 mt-0.5 ${newUserForm.role === 'MODERATOR' ? 'text-blue-600' : 'text-emerald-600'}`} size={16} />
+                                    <p className={`text-[11px] leading-relaxed font-medium ${newUserForm.role === 'MODERATOR' ? 'text-blue-800' : 'text-emerald-800'}`}>
+                                        {newUserForm.role === 'MODERATOR'
+                                            ? 'Moderators can review users, listings, and reports but cannot access system settings, wallet, or server logs.'
+                                            : newUserForm.role === 'ADMIN'
+                                            ? 'Administrators have full read/write access to the dashboard. Use caution when granting elevated privileges.'
+                                            : 'Standard users can buy and sell on the marketplace.'}
                                     </p>
                                 </div>
 

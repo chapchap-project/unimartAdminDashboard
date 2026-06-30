@@ -186,14 +186,33 @@ export interface AnalyticsData {
   revenueByCategory: { category: Category; revenue: number }[];
 }
 
-export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'NOTIFICATION_ANALYTICS' | 'SCHEDULED_NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET';
+export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'NOTIFICATION_ANALYTICS' | 'SCHEDULED_NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET' | 'SUPPORT';
 
 // Views accessible to moderators (subset of all views)
 export const MODERATOR_VIEWS: ViewState[] = [
   'DASHBOARD', 'USERS', 'LISTINGS', 'REPORTS',
   'TRANSACTIONS', 'ANALYTICS', 'NOTIFICATIONS',
-  'NOTIFICATION_ANALYTICS', 'AUDIT_LOGS', 'SYSTEM_HEALTH',
+  'NOTIFICATION_ANALYTICS', 'AUDIT_LOGS', 'SYSTEM_HEALTH', 'SUPPORT',
 ];
+
+export type TicketCategory = 'ACCOUNT' | 'LISTING' | 'PAYMENT' | 'SAFETY' | 'OTHER';
+export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  category: TicketCategory;
+  message: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  adminNote?: string | null;
+  resolvedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  user: { id: string; name: string; email: string; profileImage?: string };
+}
 
 export interface WalletBalance {
   collection_balance: number;

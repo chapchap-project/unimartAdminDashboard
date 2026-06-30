@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut,
   GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3,
   Wallet, Bell, TrendingUp, CalendarClock, ChevronDown, ChevronRight,
-  Shield, Terminal
+  Shield, Terminal, Headphones
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -148,6 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout,
 
         <NavItem id="AUDIT_LOGS" label="Audit Logs" icon={Shield} />
         <NavItem id="SYSTEM_HEALTH" label="System Health" icon={Activity} />
+        <NavItem id="SUPPORT" label="Support" icon={Headphones} />
         {!isModerator && <NavItem id="LOGS" label="Server Logs" icon={Terminal} />}
         {!isModerator && <NavItem id="SETTINGS" label="Settings" icon={Settings} />}
       </nav>

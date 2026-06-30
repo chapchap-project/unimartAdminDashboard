@@ -1,4 +1,4 @@
-import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance } from '../types';
+import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
 
 // Default URL for local Unimarket backend
 const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -411,6 +411,33 @@ class ApiService {
     return await this.request<any>('admin/wallet/topup', {
       method: 'POST',
       body: JSON.stringify({ amount, phoneNumber })
+    });
+  }
+
+  // --- Support Tickets ---
+  async getSupportTickets(params?: {
+    page?: number; limit?: number;
+    status?: TicketStatus; priority?: TicketPriority;
+    category?: string; search?: string;
+  }): Promise<{ tickets: SupportTicket[]; total: number; page: number; totalPages: number; statusCounts: Record<string, number> }> {
+    const q = new URLSearchParams();
+    if (params?.page) q.set('page', String(params.page));
+    if (params?.limit) q.set('limit', String(params.limit));
+    if (params?.status) q.set('status', params.status);
+    if (params?.priority) q.set('priority', params.priority);
+    if (params?.category) q.set('category', params.category);
+    if (params?.search) q.set('search', params.search);
+    return await this.request<any>(`admin/support?${q.toString()}`);
+  }
+
+  async getSupportTicket(id: string): Promise<SupportTicket> {
+    return await this.request<SupportTicket>(`admin/support/${id}`);
+  }
+
+  async updateSupportTicket(id: string, data: { status?: TicketStatus; priority?: TicketPriority; adminNote?: string }): Promise<{ message: string; ticket: SupportTicket }> {
+    return await this.request<any>(`admin/support/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   }
 }

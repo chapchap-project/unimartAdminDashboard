@@ -1,13 +1,14 @@
 import { io, Socket } from 'socket.io-client';
-
-const BACKEND_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+import { api } from './api';
 
 class SocketService {
     private socket: Socket | null = null;
 
     connect() {
         if (!this.socket) {
-            this.socket = io(BACKEND_URL);
+            // Use the same base URL the API service is configured to use,
+            // which may be overridden via localStorage in the Settings view.
+            this.socket = io(api.getBaseUrl());
 
             this.socket.on('connect', () => {
                 console.log('Connected to WebSocket server');

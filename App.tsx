@@ -189,7 +189,7 @@ const App: React.FC = () => {
         throw new Error('Access Denied: Staff privileges are required for this dashboard.');
       }
 
-      api.setToken(response.token); // Persist token
+      // Token is stored in an HttpOnly cookie set by the backend — no client-side storage needed.
       setCurrentUser(response.user);
       setIsAuthenticated(true);
     } catch (err: any) {
@@ -200,7 +200,8 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('auth_token');
+    // Ask the backend to clear the HttpOnly cookie — the client cannot do this itself.
+    api.logout().catch(() => {});
     setIsAuthenticated(false);
     setCurrentUser(null);
     setView('DASHBOARD');

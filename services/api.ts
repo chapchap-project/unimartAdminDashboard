@@ -4,24 +4,21 @@ import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, An
 const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
 
 class ApiService {
-  private token: string | null = null;
   private baseUrl: string = DEFAULT_API_URL;
   private localAlerts: PriorityAlert[] = [];
 
   constructor() {
-    // Load config from localStorage if available
     const storedUrl = localStorage.getItem('api_base_url');
     if (storedUrl) this.baseUrl = storedUrl;
+
+    // One-time migration: remove any token previously stored in localStorage
+    localStorage.removeItem('auth_token');
   }
 
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('auth_token', token);
-  }
-
-  getToken() {
-    return this.token || localStorage.getItem('auth_token');
-  }
+  // Token is now stored in an HttpOnly cookie managed by the browser.
+  // These stubs exist so call sites don't need changes but do nothing.
+  setToken(_token: string) {}
+  getToken() { return null; }
 
   setBaseUrl(url: string) {
     this.baseUrl = url;
@@ -42,28 +39,29 @@ class ApiService {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.getToken()}`,
-      ...(options?.headers || {}),
+      ...(options?.headers as Record<string, string> || {}),
     };
 
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     const cleanBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout for safety
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
       const response = await fetch(`${cleanBase}${cleanEndpoint}`, {
         ...options,
         headers,
-        signal: controller.signal
+        credentials: 'include', // send the HttpOnly admin_token cookie automatically
+        signal: controller.signal,
       });
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const body = await response.json().catch(() => ({}));
+        throw new Error((body as any).message || `API Error: ${response.status}`);
       }
 
       return await response.json();
@@ -79,6 +77,11 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
+  }
+
+  async logout(): Promise<void> {
+    // Instructs the backend to clear the HttpOnly cookie.
+    await this.request('auth/logout', { method: 'POST' });
   }
 
   async getProfile(): Promise<User> {

@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout,
           <GraduationCap className="text-white" size={18} />
         </div>
         <div className="min-w-0">
-          <h1 className="text-white font-bold tracking-tight text-base leading-tight">Unimarket</h1>
+          <h1 className="text-white font-bold tracking-tight text-base leading-tight">Vendas</h1>
           <span className={`inline-block text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded mt-0.5 ${
             isModerator
               ? 'bg-blue-500/20 text-blue-400'

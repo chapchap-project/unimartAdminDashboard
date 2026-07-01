@@ -30,7 +30,7 @@ const baseHeaders = () => ({
     Authorization: `Bearer ${getApiKey()}`,
     'Content-Type': 'application/json',
     'HTTP-Referer': window.location.origin,
-    'X-Title': 'Unimarket Admin Dashboard',
+    'X-Title': 'Vendas Admin Dashboard',
 });
 
 // Strip markdown code fences that some models wrap JSON in
@@ -47,7 +47,7 @@ export const testApiKey = async (key: string): Promise<{ success: boolean; error
                 Authorization: `Bearer ${key.trim()}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': window.location.origin,
-                'X-Title': 'Unimarket Admin Dashboard',
+                'X-Title': 'Vendas Admin Dashboard',
             },
             body: JSON.stringify({
                 model: getModel(),
@@ -77,7 +77,7 @@ export const getDashboardInsights = async (
         return '__NO_KEY__';
     }
 
-    const prompt = `You are an intelligent admin assistant for Unimarket, a student-to-student marketplace.
+    const prompt = `You are an intelligent admin assistant for Vendas, a student-to-student marketplace.
 Analyze the following dashboard metrics and provide a concise executive summary.
 Highlight anomalies, positive trends, or areas needing attention.
 

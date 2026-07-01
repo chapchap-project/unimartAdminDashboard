@@ -96,7 +96,7 @@ const SettingsView: React.FC = () => {
                                     value={baseUrl}
                                     onChange={(e) => { setBaseUrl(e.target.value); setConnectionStatus('IDLE'); }}
                                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm bg-white text-slate-800"
-                                    placeholder="https://api.unimarket.edu/v1"
+                                    placeholder="https://api.vendas.app/v1"
                                 />
                             </div>
                             <p className="text-xs text-slate-400 mt-1.5">Base URL for all dashboard requests.</p>
@@ -262,7 +262,7 @@ const SettingsView: React.FC = () => {
                         ))}
                         <div className="pt-2 border-t border-slate-200">
                             <p className="text-xs text-slate-400 leading-relaxed">
-                                Your API key is stored only in your browser's localStorage. It is never sent to the Unimarket backend.
+                                Your API key is stored only in your browser's localStorage. It is never sent to the Vendas backend.
                             </p>
                         </div>
                     </div>

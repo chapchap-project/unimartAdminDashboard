@@ -81,7 +81,7 @@ const SystemHealthView: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800 tracking-tight">System Health</h2>
-                    <p className="text-slate-500 mt-1">Real-time status of Unimarket infrastructure and third-party services.</p>
+                    <p className="text-slate-500 mt-1">Real-time status of Vendas infrastructure and third-party services.</p>
                 </div>
                 <button
                     onClick={fetchHealth}

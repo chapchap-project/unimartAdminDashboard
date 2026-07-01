@@ -305,7 +305,7 @@ const App: React.FC = () => {
               <div className="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-200">
                 <GraduationCap className="text-white w-8 h-8" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Unimarket Admin</h1>
+              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Vendas Admin</h1>
               <p className="text-slate-500 text-sm mt-2">Secure access for university staff</p>
             </div>
 

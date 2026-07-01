@@ -73,15 +73,23 @@ class ApiService {
 
   // --- Auth ---
   async login(email: string, password: string): Promise<{ user: User; token: string }> {
-    return await this.request('auth/login', {
+    const data = await this.request<any>('api/auth/sign-in/email', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
+    // Better Auth response: { session: { token, ... }, user: { id, name, email, role, image, university, ... } }
+    return {
+      user: {
+        ...data.user,
+        profileImage: data.user.image,
+      },
+      token: data.session?.token ?? '',
+    };
   }
 
   async logout(): Promise<void> {
-    // Instructs the backend to clear the HttpOnly cookie.
-    await this.request('auth/logout', { method: 'POST' });
+    // Instructs Better Auth to invalidate the session cookie.
+    await this.request('api/auth/sign-out', { method: 'POST' });
   }
 
   async getProfile(): Promise<User> {

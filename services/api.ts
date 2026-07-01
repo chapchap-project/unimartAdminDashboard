@@ -83,7 +83,7 @@ class ApiService {
         ...data.user,
         profileImage: data.user.image,
       },
-      token: data.session?.token ?? '',
+      token: data.token ?? data.session?.token ?? '',
     };
   }
 

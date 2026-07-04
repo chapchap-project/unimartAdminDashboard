@@ -94,12 +94,20 @@ export interface AuditLog {
   adminId: string;
   adminName: string;
   action: string;
-  previousState?: string;
-  newState?: string;
-  targetId: string;
-  reason?: string;
-  note?: string;
+  targetId?: string;
   createdAt: string;
+  // Spread from details JSON — varies per action type
+  note?: string;
+  reason?: string;
+  status?: string;
+  role?: string;
+  message?: string;
+  rejectionReason?: string;
+  sendEmail?: boolean;
+  expiresAt?: string;
+  scheduledFor?: string;
+  name?: string;
+  email?: string;
 }
 
 export interface Announcement {

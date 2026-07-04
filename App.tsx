@@ -49,24 +49,22 @@ const App: React.FC = () => {
   const inboxRef = useRef<HTMLDivElement>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
-  // Check for existing token and fetch profile
+  // Restore session from stored token on mount
   React.useEffect(() => {
     const checkAuth = async () => {
-      const token = api.getToken();
-      if (token) {
-        try {
-          const user = await api.getProfile();
-          if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
-            console.warn("Non-staff user attempted dashboard access");
-            handleLogout();
-            return;
-          }
-          setCurrentUser(user);
-          setIsAuthenticated(true);
-        } catch (err) {
-          console.error("Token invalid or expired", err);
+      if (!api.getToken()) return;
+      try {
+        const user = await api.getProfile();
+        if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+          console.warn("Non-staff user attempted dashboard access");
           handleLogout();
+          return;
         }
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.error("Token invalid or expired", err);
+        handleLogout();
       }
     };
     checkAuth();
@@ -226,7 +224,7 @@ const App: React.FC = () => {
         throw new Error('Access Denied: Staff privileges are required for this dashboard.');
       }
 
-      // Token is stored in an HttpOnly cookie set by the backend — no client-side storage needed.
+      if (response.token) api.setToken(response.token);
       setCurrentUser(response.user);
       setIsAuthenticated(true);
     } catch (err: any) {
@@ -237,8 +235,8 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Ask the backend to clear the HttpOnly cookie — the client cannot do this itself.
     api.logout().catch(() => {});
+    api.clearToken();
     setIsAuthenticated(false);
     setCurrentUser(null);
     setView('DASHBOARD');

@@ -7,18 +7,29 @@ class ApiService {
   private baseUrl: string = DEFAULT_API_URL;
   private localAlerts: PriorityAlert[] = [];
 
+  private token: string | null = null;
+
   constructor() {
     const storedUrl = localStorage.getItem('api_base_url');
     if (storedUrl) this.baseUrl = storedUrl;
 
-    // One-time migration: remove any token previously stored in localStorage
+    // Restore token from sessionStorage (cleared on tab close)
+    this.token = sessionStorage.getItem('admin_token');
+    // Clean up any old localStorage token
     localStorage.removeItem('auth_token');
   }
 
-  // Token is now stored in an HttpOnly cookie managed by the browser.
-  // These stubs exist so call sites don't need changes but do nothing.
-  setToken(_token: string) {}
-  getToken() { return null; }
+  setToken(token: string) {
+    this.token = token;
+    sessionStorage.setItem('admin_token', token);
+  }
+
+  getToken() { return this.token; }
+
+  clearToken() {
+    this.token = null;
+    sessionStorage.removeItem('admin_token');
+  }
 
   setBaseUrl(url: string) {
     this.baseUrl = url;
@@ -43,6 +54,10 @@ class ApiService {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string> || {}),
     };
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
 
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     const cleanBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
@@ -391,15 +406,13 @@ class ApiService {
 
   async getLogContent(filename: string): Promise<string> {
     const endpoint = `admin/logs/${filename}`;
-    // Using custom logic since this endpoint returns text, not JSON
-    const headers = {
-      'Authorization': `Bearer ${this.getToken()}`,
-    };
-    
+    const headers: Record<string, string> = {};
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
     const cleanBase = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`;
-    
-    const response = await fetch(`${cleanBase}${cleanEndpoint}`, { headers });
+
+    const response = await fetch(`${cleanBase}${cleanEndpoint}`, { headers, credentials: 'include' });
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }

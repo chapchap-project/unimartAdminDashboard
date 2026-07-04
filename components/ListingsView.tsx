@@ -494,6 +494,17 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
 const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: () => void; onModerated: (id: string, status: string, reason?: string) => void }> = ({ product, seller, onClose, onModerated }) => {
   const [aiResult, setAiResult] = useState<{ riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'; reasoning: string; suggestedAction: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [moderating, setModerating] = useState<string | null>(null);
+
+  const handleAction = async (status: string, reason?: string) => {
+    if (moderating) return;
+    setModerating(status);
+    try {
+      await onModerated(product.id, status, reason);
+    } finally {
+      setModerating(null);
+    }
+  };
 
   useEffect(() => {
     if (product.aiAnalysis) return; // backend already provided analysis
@@ -711,16 +722,20 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
             <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest text-center">Awaiting Review — not yet visible to buyers</p>
             <div className="flex gap-2">
               <button
-                onClick={() => onModerated(product.id, 'ACTIVE')}
-                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2"
+                onClick={() => handleAction('ACTIVE')}
+                disabled={!!moderating}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <CheckCircle size={18} /> Approve & Go Live
+                {moderating === 'ACTIVE' ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                {moderating === 'ACTIVE' ? 'Approving…' : 'Approve & Go Live'}
               </button>
               <button
-                onClick={() => onModerated(product.id, 'REJECTED')}
-                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2"
+                onClick={() => handleAction('REJECTED')}
+                disabled={!!moderating}
+                className="flex-1 px-6 py-3 bg-rose-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-rose-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <XCircle size={18} /> Reject
+                {moderating === 'REJECTED' ? <Loader2 size={18} className="animate-spin" /> : <XCircle size={18} />}
+                {moderating === 'REJECTED' ? 'Rejecting…' : 'Reject'}
               </button>
             </div>
           </>
@@ -728,36 +743,43 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
           <>
             <div className="flex gap-2">
               <button
-                onClick={() => onModerated(product.id, 'ACTIVE')}
-                className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2"
+                onClick={() => handleAction('ACTIVE')}
+                disabled={!!moderating || product.status === 'ACTIVE'}
+                title={product.status === 'ACTIVE' ? 'Already approved' : undefined}
+                className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-100 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-900 disabled:hover:shadow-none"
               >
-                <CheckCircle size={18} /> Approve
+                {moderating === 'ACTIVE' ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                {product.status === 'ACTIVE' ? 'Already Approved' : moderating === 'ACTIVE' ? 'Approving…' : 'Approve'}
               </button>
               <button
-                onClick={() => onModerated(product.id, 'HIDDEN')}
-                className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all"
+                onClick={() => handleAction('HIDDEN')}
+                disabled={!!moderating}
+                className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-amber-100 hover:text-amber-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Hide
+                {moderating === 'HIDDEN' ? <Loader2 size={16} className="animate-spin" /> : 'Hide'}
               </button>
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => onModerated(product.id, 'WARNED')}
-                className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all"
+                onClick={() => handleAction('WARNED')}
+                disabled={!!moderating}
+                className="flex-1 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
-                Warn Seller
+                {moderating === 'WARNED' ? <Loader2 size={12} className="animate-spin" /> : 'Warn Seller'}
               </button>
               <button
-                onClick={() => onModerated(product.id, 'ESCALATED')}
-                className="flex-1 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all"
+                onClick={() => handleAction('ESCALATED')}
+                disabled={!!moderating}
+                className="flex-1 px-4 py-2 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
-                Escalate
+                {moderating === 'ESCALATED' ? <Loader2 size={12} className="animate-spin" /> : 'Escalate'}
               </button>
               <button
-                onClick={() => onModerated(product.id, 'REMOVED')}
-                className="flex-1 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all flex items-center justify-center gap-1"
+                onClick={() => handleAction('REMOVED')}
+                disabled={!!moderating}
+                className="flex-1 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1"
               >
-                <Trash2 size={12} /> Remove
+                {moderating === 'REMOVED' ? <Loader2 size={12} className="animate-spin" /> : <><Trash2 size={12} /> Remove</>}
               </button>
             </div>
           </>

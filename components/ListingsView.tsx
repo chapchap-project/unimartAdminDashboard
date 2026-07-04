@@ -425,11 +425,16 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
             try {
               await api.updateProductStatus(id, status as ProductStatus, reason);
               const wasApproved = status === 'ACTIVE';
+              const isRemoval = status === 'REMOVED';
               const wasPending = products.find(p => p.id === id)?.status === 'PENDING_REVIEW';
-              setProducts(prev => prev.map(p => p.id === id ? { ...p, status: status as any } : p));
+              if (isRemoval) {
+                setProducts(prev => prev.filter(p => p.id !== id));
+              } else {
+                setProducts(prev => prev.map(p => p.id === id ? { ...p, status: status as any } : p));
+              }
               if (wasPending) setPendingCount(c => Math.max(0, c - 1));
               setSelectedProduct(null);
-              success(`Listing Updated`, wasApproved ? 'Listing is now live.' : `Status changed to ${status}.`);
+              success(`Listing Updated`, wasApproved ? 'Listing is now live.' : isRemoval ? 'Listing removed.' : `Status changed to ${status}.`);
             } catch (err) {
               error(`Update Failed`, `Could not update listing ${id}.`);
             }
@@ -460,7 +465,12 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 await api.updateProductStatus(targetId, status, reason, note);
               }
               const wasPending = ids.some(tid => products.find(p => p.id === tid)?.status === 'PENDING_REVIEW');
-              setProducts(prev => prev.map(p => ids.includes(p.id) ? { ...p, status } : p));
+              if (isRejection) {
+                setProducts(prev => prev.map(p => ids.includes(p.id) ? { ...p, status } : p));
+              } else {
+                // Removed listings disappear from the list immediately
+                setProducts(prev => prev.filter(p => !ids.includes(p.id)));
+              }
               if (wasPending) setPendingCount(c => Math.max(0, c - ids.length));
               setShowReasonModal(null);
               setSelectedProduct(null);
@@ -468,7 +478,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
               if (isRejection) {
                 success(`Listing Rejected`, `${ids.length} listing(s) rejected. The seller has been notified.`);
               } else {
-                error(`Items Removed`, `${ids.length} listing(s) have been removed permanently.`);
+                success(`Items Removed`, `${ids.length} listing(s) have been removed.`);
               }
             } catch (err) {
               error(isRejection ? `Rejection Failed` : `Removal Failed`, `Could not process the request.`);

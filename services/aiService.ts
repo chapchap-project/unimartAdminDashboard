@@ -2,7 +2,7 @@ import { DashboardMetrics, Product } from "../types";
 
 const LS_KEY = 'unimart_openrouter_key';
 const LS_MODEL = 'unimart_ai_model';
-const DEFAULT_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
+const DEFAULT_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Read at call-time so Settings changes take effect immediately without a reload
@@ -39,36 +39,51 @@ const extractJSON = (text: string): string => {
     return fenced ? fenced[1].trim() : text.trim();
 };
 
-// Stable probe model used only for key validation — not affected by the user's selected model.
-const PROBE_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
+// Probe models tried in order during key validation. If one has no endpoints, the next is tried.
+const PROBE_MODELS = [
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'mistralai/mistral-7b-instruct:free',
+    'qwen/qwen3-30b-a3b:free',
+];
 
 export const testApiKey = async (key: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-        const res = await fetch(ENDPOINT, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${key.trim()}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'Vendas Admin Dashboard',
-            },
-            body: JSON.stringify({
-                model: PROBE_MODEL,
-                messages: [{ role: 'user', content: 'Reply with the single word OK.' }],
-                max_tokens: 5,
-            }),
-        });
+    const headers = {
+        Authorization: `Bearer ${key.trim()}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Vendas Admin Dashboard',
+    };
 
-        if (res.status === 401) return { success: false, error: 'Invalid API key — authentication rejected.' };
-        if (res.status === 429) return { success: false, error: 'Rate limit reached — key is valid but throttled.' };
-        if (!res.ok) {
+    for (const model of PROBE_MODELS) {
+        try {
+            const res = await fetch(ENDPOINT, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    model,
+                    messages: [{ role: 'user', content: 'Reply with the single word OK.' }],
+                    max_tokens: 5,
+                }),
+            });
+
+            if (res.status === 401) return { success: false, error: 'Invalid API key — authentication rejected.' };
+            if (res.status === 429) return { success: false, error: 'Rate limit reached — key is valid but throttled.' };
+
+            if (res.ok) return { success: true };
+
             const body = await res.json().catch(() => ({}));
-            return { success: false, error: body?.error?.message || `HTTP ${res.status}` };
+            const msg: string = body?.error?.message || '';
+
+            // Model unavailable — try the next probe
+            if (msg.toLowerCase().includes('no endpoints') || msg.toLowerCase().includes('unavailable')) continue;
+
+            return { success: false, error: msg || `HTTP ${res.status}` };
+        } catch (e: any) {
+            return { success: false, error: e.message || 'Network error — check your connection.' };
         }
-        return { success: true };
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Network error — check your connection.' };
     }
+
+    return { success: false, error: 'All probe models are currently unavailable. Try again later.' };
 };
 
 export const getDashboardInsights = async (

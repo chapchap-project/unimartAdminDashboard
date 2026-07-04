@@ -59,7 +59,7 @@ const SettingsView: React.FC = () => {
         {
             group: '🆓 Free Models — Top Rated',
             models: [
-                { label: 'DeepSeek V3 0324 ⭐ Recommended', value: 'deepseek/deepseek-chat-v3-0324:free' },
+                { label: 'Llama 3.3 70B Instruct ⭐ Recommended', value: 'meta-llama/llama-3.3-70b-instruct:free' },
                 { label: 'DeepSeek R1 — Best reasoning', value: 'deepseek/deepseek-r1:free' },
                 { label: 'DeepSeek R1 0528 — Latest R1', value: 'deepseek/deepseek-r1-0528:free' },
                 { label: 'Gemini 2.5 Pro Experimental', value: 'google/gemini-2.5-pro-exp-03-25:free' },
@@ -91,7 +91,7 @@ const SettingsView: React.FC = () => {
                 { label: 'Gemini 2.5 Pro (Google)', value: 'google/gemini-2.5-pro-preview' },
                 { label: 'Gemini 2.0 Flash (Google) — Fast', value: 'google/gemini-2.0-flash-001' },
                 { label: 'DeepSeek R1 — No rate limits', value: 'deepseek/deepseek-r1' },
-                { label: 'DeepSeek V3 — No rate limits', value: 'deepseek/deepseek-chat-v3-0324' },
+                { label: 'DeepSeek V3 0324 — No rate limits', value: 'deepseek/deepseek-chat-v3-0324' },
                 { label: 'Mistral Large 2 (Mistral)', value: 'mistralai/mistral-large-2411' },
                 { label: 'Grok 2 (xAI)', value: 'x-ai/grok-2-1212' },
                 { label: 'Llama 3.3 70B Instruct (Paid hosting)', value: 'meta-llama/llama-3.3-70b-instruct' },

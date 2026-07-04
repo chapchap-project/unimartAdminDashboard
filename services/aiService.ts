@@ -39,6 +39,9 @@ const extractJSON = (text: string): string => {
     return fenced ? fenced[1].trim() : text.trim();
 };
 
+// Stable probe model used only for key validation — not affected by the user's selected model.
+const PROBE_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
+
 export const testApiKey = async (key: string): Promise<{ success: boolean; error?: string }> => {
     try {
         const res = await fetch(ENDPOINT, {
@@ -50,7 +53,7 @@ export const testApiKey = async (key: string): Promise<{ success: boolean; error
                 'X-Title': 'Vendas Admin Dashboard',
             },
             body: JSON.stringify({
-                model: getModel(),
+                model: PROBE_MODEL,
                 messages: [{ role: 'user', content: 'Reply with the single word OK.' }],
                 max_tokens: 5,
             }),

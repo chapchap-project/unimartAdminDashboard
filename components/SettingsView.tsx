@@ -64,7 +64,7 @@ const SettingsView: React.FC = () => {
                 { label: 'DeepSeek R1 0528 — Latest R1', value: 'deepseek/deepseek-r1-0528:free' },
                 { label: 'Gemini 2.5 Pro Experimental', value: 'google/gemini-2.5-pro-exp-03-25:free' },
                 { label: 'Gemini 2.5 Flash Preview', value: 'google/gemini-2.5-flash-preview:free' },
-                { label: 'Gemini 2.0 Flash Experimental', value: 'google/gemini-2.0-flash-exp:free' },
+                { label: 'Gemini 2.0 Flash Thinking Experimental', value: 'google/gemini-2.0-flash-thinking-exp:free' },
                 { label: 'Llama 4 Maverick', value: 'meta-llama/llama-4-maverick:free' },
                 { label: 'Llama 4 Scout', value: 'meta-llama/llama-4-scout:free' },
                 { label: 'Llama 3.3 70B Instruct', value: 'meta-llama/llama-3.3-70b-instruct:free' },

@@ -55,16 +55,51 @@ const SettingsView: React.FC = () => {
         }
     };
 
-    const POPULAR_MODELS = [
-        { label: 'DeepSeek V3 (Free) — Recommended', value: 'deepseek/deepseek-chat-v3-0324:free' },
-        { label: 'DeepSeek R1 (Free) — Best reasoning', value: 'deepseek/deepseek-r1:free' },
-        { label: 'Gemini 2.5 Pro (Free)', value: 'google/gemini-2.5-pro-exp-03-25:free' },
-        { label: 'Gemini 2.0 Flash (Free)', value: 'google/gemini-2.0-flash-exp:free' },
-        { label: 'Llama 4 Maverick (Free)', value: 'meta-llama/llama-4-maverick:free' },
-        { label: 'Llama 3.3 70B (Free)', value: 'meta-llama/llama-3.3-70b-instruct:free' },
-        { label: 'Qwen3 235B (Free)', value: 'qwen/qwen3-235b-a22b:free' },
-        { label: 'Mistral Small 3.1 24B (Free)', value: 'mistralai/mistral-small-3.1-24b-instruct:free' },
+    const MODEL_GROUPS = [
+        {
+            group: '🆓 Free Models — Top Rated',
+            models: [
+                { label: 'DeepSeek V3 0324 ⭐ Recommended', value: 'deepseek/deepseek-chat-v3-0324:free' },
+                { label: 'DeepSeek R1 — Best reasoning', value: 'deepseek/deepseek-r1:free' },
+                { label: 'DeepSeek R1 0528 — Latest R1', value: 'deepseek/deepseek-r1-0528:free' },
+                { label: 'Gemini 2.5 Pro Experimental', value: 'google/gemini-2.5-pro-exp-03-25:free' },
+                { label: 'Gemini 2.5 Flash Preview', value: 'google/gemini-2.5-flash-preview:free' },
+                { label: 'Gemini 2.0 Flash Experimental', value: 'google/gemini-2.0-flash-exp:free' },
+                { label: 'Llama 4 Maverick', value: 'meta-llama/llama-4-maverick:free' },
+                { label: 'Llama 4 Scout', value: 'meta-llama/llama-4-scout:free' },
+                { label: 'Llama 3.3 70B Instruct', value: 'meta-llama/llama-3.3-70b-instruct:free' },
+                { label: 'Qwen3 235B A22B — Large MoE', value: 'qwen/qwen3-235b-a22b:free' },
+                { label: 'Qwen3 30B A3B — Fast MoE', value: 'qwen/qwen3-30b-a3b:free' },
+                { label: 'Mistral Small 3.1 24B', value: 'mistralai/mistral-small-3.1-24b-instruct:free' },
+                { label: 'Mistral 7B Instruct', value: 'mistralai/mistral-7b-instruct:free' },
+                { label: 'Phi-4 (Microsoft)', value: 'microsoft/phi-4:free' },
+                { label: 'Phi-4 Mini Instruct (Microsoft)', value: 'microsoft/phi-4-mini-instruct:free' },
+                { label: 'Gemma 3 27B (Google)', value: 'google/gemma-3-27b-it:free' },
+                { label: 'Gemma 3 9B (Google)', value: 'google/gemma-3-9b-it:free' },
+            ],
+        },
+        {
+            group: '💎 Paid Models — Industry Leaders',
+            models: [
+                { label: 'Claude Sonnet 4 (Anthropic) — $3/$15 per M', value: 'anthropic/claude-sonnet-4-5' },
+                { label: 'Claude 3.5 Haiku (Anthropic) — Fast & cheap', value: 'anthropic/claude-3.5-haiku' },
+                { label: 'GPT-4o (OpenAI)', value: 'openai/gpt-4o' },
+                { label: 'GPT-4o Mini (OpenAI) — Efficient', value: 'openai/gpt-4o-mini' },
+                { label: 'o4-mini (OpenAI) — Advanced reasoning', value: 'openai/o4-mini' },
+                { label: 'GPT-4.1 (OpenAI)', value: 'openai/gpt-4.1' },
+                { label: 'GPT-4.1 Mini (OpenAI)', value: 'openai/gpt-4.1-mini' },
+                { label: 'Gemini 2.5 Pro (Google)', value: 'google/gemini-2.5-pro-preview' },
+                { label: 'Gemini 2.0 Flash (Google) — Fast', value: 'google/gemini-2.0-flash-001' },
+                { label: 'DeepSeek R1 — No rate limits', value: 'deepseek/deepseek-r1' },
+                { label: 'DeepSeek V3 — No rate limits', value: 'deepseek/deepseek-chat-v3-0324' },
+                { label: 'Mistral Large 2 (Mistral)', value: 'mistralai/mistral-large-2411' },
+                { label: 'Grok 2 (xAI)', value: 'x-ai/grok-2-1212' },
+                { label: 'Llama 3.3 70B Instruct (Paid hosting)', value: 'meta-llama/llama-3.3-70b-instruct' },
+            ],
+        },
     ];
+
+    const allModels = MODEL_GROUPS.flatMap(g => g.models);
 
     return (
         <div className="space-y-6 animate-fade-in pb-10">
@@ -198,14 +233,20 @@ const SettingsView: React.FC = () => {
                                 onChange={(e) => setAiModel(e.target.value)}
                                 className="w-full border border-slate-200 rounded-lg px-3 py-3 text-sm bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500"
                             >
-                                {POPULAR_MODELS.map(m => (
-                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                {MODEL_GROUPS.map(g => (
+                                    <optgroup key={g.group} label={g.group}>
+                                        {g.models.map(m => (
+                                            <option key={m.value} value={m.value}>{m.label}</option>
+                                        ))}
+                                    </optgroup>
                                 ))}
-                                {!POPULAR_MODELS.find(m => m.value === aiModel) && (
+                                {!allModels.find(m => m.value === aiModel) && (
                                     <option value={aiModel}>{aiModel} (custom)</option>
                                 )}
                             </select>
-                            <p className="text-xs text-slate-400 mt-1.5">All listed models are free on OpenRouter — no usage costs.</p>
+                            <p className="text-xs text-slate-400 mt-1.5">
+                                Free models cost nothing. Paid models require OpenRouter credits — check pricing at <span className="font-semibold text-violet-600">openrouter.ai/models</span>.
+                            </p>
                         </div>
 
                         {/* Actions */}

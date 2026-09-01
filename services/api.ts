@@ -1,7 +1,7 @@
 import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
 
 // Default URL for local Unimarket backend
-const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL;
 
 class ApiService {
   private baseUrl: string = DEFAULT_API_URL;
@@ -262,14 +262,14 @@ class ApiService {
   // --- Notifications/Announcements ---
   async getAnnouncements(): Promise<Announcement[]> {
     const logs = await this.getAuditLogs();
-    
+
     return logs
       .filter(log => log.action === 'BROADCAST_NOTIFICATION')
       .map(log => {
         const details = log as any;
         const messageText = details.message || details.note || 'No content';
         const expiresAtRaw = details.expiresAt || '2099-12-31';
-        
+
         // Determine status based on expiration date
         const isExpired = new Date(expiresAtRaw) < new Date();
         const computedStatus = isExpired ? 'EXPIRED' : 'ACTIVE';
@@ -400,8 +400,8 @@ class ApiService {
     return await this.request<SystemHealth>('admin/health');
   }
 
-  async getLogFiles(): Promise<{filename: string, size: number, modifiedAt: string}[]> {
-    return await this.request<{filename: string, size: number, modifiedAt: string}[]>('admin/logs/files');
+  async getLogFiles(): Promise<{ filename: string, size: number, modifiedAt: string }[]> {
+    return await this.request<{ filename: string, size: number, modifiedAt: string }[]>('admin/logs/files');
   }
 
   async getLogContent(filename: string): Promise<string> {

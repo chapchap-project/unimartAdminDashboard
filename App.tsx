@@ -43,6 +43,7 @@ const App: React.FC = () => {
   const [initialListingId, setInitialListingId] = useState<string | null>(null);
   const [initialReportId, setInitialReportId] = useState<string | null>(null);
   const [initialFraudOnly, setInitialFraudOnly] = useState(false);
+  const [reportRefreshTick, setReportRefreshTick] = useState(0);
   const [notifications, setNotifications] = useState<{ id: string, message: string, type: 'REPORT' | 'ALERT' | 'NEW_USER' | 'SUPPORT_TICKET' | 'PENDING_LISTING', data: any }[]>([]);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -84,6 +85,8 @@ const App: React.FC = () => {
       setInitialFraudOnly(params.fraudOnly);
     }
   };
+
+  const refreshReportBadge = () => setReportRefreshTick(t => t + 1);
 
   // Close inbox when clicking outside
   useEffect(() => {
@@ -219,7 +222,7 @@ const App: React.FC = () => {
 
     try {
       const response = await api.login(email, password);
-      
+
       if (response.user.role !== 'ADMIN' && response.user.role !== 'MODERATOR') {
         throw new Error('Access Denied: Staff privileges are required for this dashboard.');
       }
@@ -256,7 +259,7 @@ const App: React.FC = () => {
       case 'USERS':
         return <UsersView isModerator={isModerator} />;
       case 'REPORTS':
-        return <ReportsView initialReportId={initialReportId} onClearInitial={() => setInitialReportId(null)} />;
+        return <ReportsView initialReportId={initialReportId} onClearInitial={() => setInitialReportId(null)} onReportUpdated={refreshReportBadge} />;
       case 'TRANSACTIONS':
         return <TransactionsView />;
       case 'AUDIT_LOGS':
@@ -369,7 +372,7 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-        <Sidebar currentView={currentView} setView={navigateToView} user={currentUser} onLogout={handleLogout} isModerator={isModerator} />
+        <Sidebar currentView={currentView} setView={navigateToView} user={currentUser} onLogout={handleLogout} isModerator={isModerator} reportRefreshTick={reportRefreshTick} />
 
         <div className="flex-1 ml-60 flex flex-col h-screen overflow-hidden">
           <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-30 shadow-sm">

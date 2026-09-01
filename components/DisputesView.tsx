@@ -6,9 +6,10 @@ import { api } from '../services/api';
 interface ReportsViewProps {
     initialReportId?: string | null;
     onClearInitial?: () => void;
+    onReportUpdated?: () => void;
 }
 
-const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearInitial }) => {
+const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearInitial, onReportUpdated }) => {
     const [reports, setReports] = useState<Report[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -52,6 +53,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                     `${status === 'RESOLVED' ? 'Resolved' : 'Dismissed'} report [${report.reason}] by ${report.reporter.name}. Target entity: ${report.type === 'LISTING' ? report.listing?.id : report.reportedUser?.id}`
                 );
             }
+            if (onReportUpdated) onReportUpdated();
         } catch (e) {
             console.error("Failed to update report status", e);
         }

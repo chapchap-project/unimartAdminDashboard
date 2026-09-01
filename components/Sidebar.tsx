@@ -14,22 +14,26 @@ interface SidebarProps {
   user: User | null;
   onLogout: () => void;
   isModerator?: boolean;
+  reportRefreshTick?: number;
 }
 
 const NOTIFICATION_VIEWS: ViewState[] = ['ANNOUNCEMENTS', 'NOTIFICATIONS', 'SCHEDULED_NOTIFICATIONS', 'NOTIFICATION_ANALYTICS'];
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout, isModerator = false }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout, isModerator = false, reportRefreshTick = 0 }) => {
   const [notifExpanded, setNotifExpanded] = useState(NOTIFICATION_VIEWS.includes(currentView));
   const [openReports, setOpenReports] = useState<number | null>(null);
 
-  // Fetch pending report count for the badge
+  // Fetch live pending report count for the badge
   useEffect(() => {
-    api.getReports(1, 1).then(data => {
-      const pending = data.reports.filter(r => r.status === 'PENDING').length;
-      // Use totalItems as proxy if available, fall back to filtered count
-      setOpenReports(data.totalItems > 0 ? data.totalItems : pending);
-    }).catch(() => {});
-  }, []);
+    api.getReports(1, 1000)
+      .then((data) => {
+        const pending = data.reports.filter(r => r.status === 'PENDING').length;
+        setOpenReports(pending);
+      })
+      .catch(() => {
+        setOpenReports(0);
+      });
+  }, [reportRefreshTick]);
 
   // Auto-expand notifications group when a notification view is active
   useEffect(() => {

@@ -171,8 +171,10 @@ export enum SystemStatus {
 
 export interface SystemHealth {
   apiStatus: SystemStatus;
+  overallStatus?: SystemStatus;
   apiUptime: string;
   apiLatency: number;
+  dbStatus?: SystemStatus;
   paymentProviderStatus: SystemStatus;
   paymentProviderUptime: string;
   backgroundJobsStatus: SystemStatus;
@@ -182,6 +184,11 @@ export interface SystemHealth {
   cpuUsage: number;
   memoryUsage: number;
   lastCheck: string;
+  details?: {
+    pendingTasks?: number;
+    load1m?: number | string;
+    [key: string]: unknown;
+  };
 }
 
 export type Timeframe = 'TODAY' | '7D' | '30D' | 'CUSTOM';

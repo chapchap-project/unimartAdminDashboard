@@ -49,6 +49,8 @@ const SystemHealthView: React.FC = () => {
         );
     }
 
+    const overallStatus = health.overallStatus ?? health.apiStatus;
+
     const getStatusColor = (status: SystemStatus) => {
         switch (status) {
             case SystemStatus.OPERATIONAL: return 'text-emerald-500';
@@ -76,6 +78,8 @@ const SystemHealthView: React.FC = () => {
         }
     };
 
+    const pendingTasks = health.details?.pendingTasks ?? 0;
+
     return (
         <div className="space-y-8 animate-fade-in pb-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -94,15 +98,15 @@ const SystemHealthView: React.FC = () => {
             </div>
 
             {/* Global Status Banner */}
-            <div className={`p-6 rounded-2xl border flex items-center gap-4 ${getStatusBg(health.apiStatus)}`}>
+            <div className={`p-6 rounded-2xl border flex items-center gap-4 ${getStatusBg(overallStatus)}`}>
                 <div className="p-3 bg-white rounded-xl shadow-sm">
-                    {getStatusIcon(health.apiStatus)}
+                    {getStatusIcon(overallStatus)}
                 </div>
                 <div>
                     <h3 className="text-lg font-bold text-slate-800">
-                        {health.apiStatus === SystemStatus.OPERATIONAL ? 'All Systems Operational' : 'Some Systems Experiencing Issues'}
+                        {overallStatus === SystemStatus.OPERATIONAL ? 'VPS backend is healthy' : overallStatus === SystemStatus.DEGRADED ? 'VPS backend is under load' : 'VPS backend is offline'}
                     </h3>
-                    <p className="text-sm text-slate-500">Last scanned: {new Date(health.lastCheck).toLocaleTimeString()}</p>
+                    <p className="text-sm text-slate-500">Last scanned: {new Date(health.lastCheck).toLocaleTimeString()} · live backend: api.vendas.co.ke on the VPS host</p>
                 </div>
             </div>
 
@@ -116,25 +120,25 @@ const SystemHealthView: React.FC = () => {
                     icon={Server}
                 />
                 <HealthCard
-                    title="Payment Gateway"
-                    status={health.paymentProviderStatus}
-                    uptime={health.paymentProviderUptime}
-                    metrics="Integrated via Stripe"
-                    icon={CreditCard}
+                    title="Database"
+                    status={health.dbStatus ?? health.apiStatus}
+                    uptime={health.apiUptime}
+                    metrics={health.dbStatus === SystemStatus.OPERATIONAL ? 'Connected and responsive' : health.dbStatus === SystemStatus.DEGRADED ? 'Database latency elevated' : 'Database unreachable'}
+                    icon={Database}
                 />
                 <HealthCard
                     title="Background Jobs"
                     status={health.backgroundJobsStatus}
                     uptime={health.backgroundJobsUptime}
-                    metrics="Queue: 42 pending"
+                    metrics={pendingTasks > 0 ? `${pendingTasks} queued` : 'No queued jobs'}
                     icon={Zap}
                 />
                 <HealthCard
-                    title="Communication"
-                    status={health.deliveryStatus}
-                    uptime={health.deliveryUptime}
-                    metrics="Email & SMS Delivery"
-                    icon={Mail}
+                    title="Payment Gateway"
+                    status={health.paymentProviderStatus}
+                    uptime={health.paymentProviderUptime}
+                    metrics={health.paymentProviderStatus === SystemStatus.OPERATIONAL ? 'Connected to provider' : health.paymentProviderStatus === SystemStatus.DEGRADED ? 'Provider under load' : 'Provider offline'}
+                    icon={CreditCard}
                 />
             </div>
 
@@ -170,20 +174,20 @@ const SystemHealthView: React.FC = () => {
                         <div>
                             <p className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Health Monitoring</p>
                             <p className="text-xs text-emerald-700 mt-1 leading-relaxed">
-                                Metrics are collected every 30 seconds from all active nodes. Historical data is available in the infrastructure monitoring tool (Grafana).
+                                Metrics are collected every 30 seconds from the live VPS backend at api.vendas.co.ke. This view reflects the actual server status, database latency, and job queue load.
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Region Status */}
+                {/* Live Service Status */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-800 mb-6">Service Regions</h3>
+                    <h3 className="text-lg font-bold text-slate-800 mb-6">Live Services</h3>
                     <div className="space-y-4">
-                        <RegionItem name="Africa (Nairobi)" status={SystemStatus.OPERATIONAL} />
-                        <RegionItem name="Europe (Frankfurt)" status={SystemStatus.OPERATIONAL} />
-                        <RegionItem name="US East (N. Virginia)" status={SystemStatus.OPERATIONAL} />
-                        <RegionItem name="Asia (Singapore)" status={SystemStatus.DEGRADED} />
+                        <RegionItem name="Primary VPS API" status={health.apiStatus} />
+                        <RegionItem name="Database" status={health.dbStatus ?? health.apiStatus} />
+                        <RegionItem name="Background Jobs" status={health.backgroundJobsStatus} />
+                        <RegionItem name="Payment Provider" status={health.paymentProviderStatus} />
                     </div>
                 </div>
             </div>

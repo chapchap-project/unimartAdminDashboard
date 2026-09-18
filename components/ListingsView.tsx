@@ -302,7 +302,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                 {filteredProducts.map(p => (
                   <tr
                     key={p.id}
-                    className={`group hover:bg-emerald-50/30 transition-all cursor-pointer ${selectedProduct?.id === p.id ? 'bg-emerald-50 shadow-inner' : ''}`}
+                    className={`group hover:bg-emerald-50/30 transition-all cursor-pointer ${selectedProduct?.id === p.id ? 'bg-emerald-50 shadow-inner' : p.status === 'REJECTED' ? 'bg-rose-50/40' : ''}`}
                     onClick={() => setSelectedProduct(p)}
                   >
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
@@ -319,7 +319,19 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                           <img src={p.images[0]} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div>
-                          <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{p.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{p.title}</h4>
+                            {p.status === 'REJECTED' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-rose-100 text-rose-700 border border-rose-200">
+                                <XCircle size={10} /> Rejected
+                              </span>
+                            )}
+                            {p.status === 'REMOVED' && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-200 text-slate-600 border border-slate-300">
+                                <Trash2 size={10} /> Removed
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-slate-400">
                             <span className="flex items-center gap-1 uppercase tracking-widest font-black text-slate-300">{p.category}</span>
                             <span>•</span>
@@ -544,7 +556,9 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
           <div className="flex items-start justify-between">
             <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight uppercase">{product.title}</h4>
             <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${product.status === ProductStatus.ACTIVE ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-              'bg-slate-100 text-slate-500 border-slate-200'
+              product.status === ProductStatus.REJECTED ? 'bg-rose-50 text-rose-600 border-rose-200' :
+                product.status === 'REMOVED' ? 'bg-slate-200 text-slate-600 border-slate-300' :
+                  'bg-slate-100 text-slate-500 border-slate-200'
               }`}>
               {product.status}
             </div>

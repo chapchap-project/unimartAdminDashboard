@@ -5,12 +5,15 @@ import { getDashboardInsights } from '../services/aiService';
 import { api } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import PayoutDialog from './PayoutDialog';
 
 interface DashboardHomeProps {
+  canManagePayouts?: boolean;
   setView: (view: ViewState, params?: { targetId?: string, fraudOnly?: boolean }) => void;
 }
 
-const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
+const DashboardHome: React.FC<DashboardHomeProps> = ({ setView, canManagePayouts = false }) => {
+  const [payoutId, setPayoutId] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [alerts, setAlerts] = useState<PriorityAlert[]>([]);
   const [fraudQueue, setFraudQueue] = useState<FraudQueueItem[]>([]);
@@ -95,6 +98,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
 
   return (
     <div className="space-y-8 animate-fade-in pb-10">
+      {payoutId && <PayoutDialog payoutId={payoutId} onClose={() => setPayoutId(null)} onQueued={fetchDashboardData} />}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -190,7 +194,10 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView }) => {
                       </div>
                       <p className="text-sm font-bold text-slate-800 leading-tight group-hover:text-emerald-600 transition-colors">{alert.message}</p>
 
-                      <div className="mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0">
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        {canManagePayouts && alert.type === 'PAYMENT' && alert.id.startsWith('payout-issue-') && alert.targetId && (
+                          <button onClick={() => setPayoutId(alert.targetId!)} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold">Review / retry payment</button>
+                        )}
                         {alert.actionLabel && (
                           <button
                             onClick={() => alert.actionView && setView(alert.actionView, { targetId: alert.targetId })}

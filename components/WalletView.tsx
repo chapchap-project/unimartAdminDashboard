@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { WalletBalance } from '../types';
+import PayoutsPanel from './PayoutsPanel';
 import { Wallet, ArrowUpCircle, RefreshCw, AlertCircle, CheckCircle2, Phone, CreditCard } from 'lucide-react';
 
 const WalletView: React.FC = () => {
@@ -63,7 +64,7 @@ const WalletView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Wallet Management</h1>
-          <p className="text-slate-500 text-sm mt-1">Monitor and fund the system payout (B2C) wallets</p>
+          <p className="text-slate-500 text-sm mt-1">Send M-Pesa payments and review recorded collections and payouts</p>
         </div>
         <button 
           onClick={fetchBalance}
@@ -75,6 +76,10 @@ const WalletView: React.FC = () => {
         </button>
       </div>
 
+      <PayoutsPanel />
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        Seller and manual payments use your Paystack balance. Fund it in <a href="https://dashboard.paystack.com" target="_blank" rel="noreferrer" className="font-bold underline">Paystack</a> before retrying an insufficient-balance payment. The figures below are ledger estimates, not your live Paystack balance.
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Collection Wallet Card */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
@@ -111,8 +116,8 @@ const WalletView: React.FC = () => {
               <Wallet size={24} />
             </div>
             <div>
-              <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Service Wallet (Payout Float)</p>
-              <h3 className="text-sm font-bold text-slate-700">Available for Withdrawals</h3>
+              <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Retained Funds (Estimate)</p>
+              <h3 className="text-sm font-bold text-slate-700">Recorded collections less payouts and refunds</h3>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
@@ -136,20 +141,20 @@ const WalletView: React.FC = () => {
           <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl">
              <h3 className="font-bold flex items-center gap-2 mb-4">
                <AlertCircle size={18} className="text-amber-400" />
-               B2C Payout Rules
+               Payment funding
              </h3>
              <ul className="space-y-3 text-xs text-slate-300">
                <li className="flex gap-2">
                  <span className="text-emerald-400 font-bold">•</span>
-                 Withdrawals require 105% of the payout amount in the Service Wallet (to cover fees).
+                 Your Paystack balance must cover the payment amount and transfer fees.
                </li>
                <li className="flex gap-2">
                  <span className="text-emerald-400 font-bold">•</span>
-                 If Service balance is empty, withdrawals return a 417 error.
+                 An insufficient Paystack balance causes the payment to fail. Fund it before retrying.
                </li>
                <li className="flex gap-2">
                  <span className="text-emerald-400 font-bold">•</span>
-                 Service wallet funds cannot be withdrawn; they are strictly for payouts and fees.
+                 The STK form funds the Safaricom till. It does not add funds to Paystack.
                </li>
              </ul>
           </div>
@@ -160,7 +165,7 @@ const WalletView: React.FC = () => {
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
               <ArrowUpCircle className="text-emerald-500" />
-              Top Up Payout Float
+              Fund Safaricom Till
             </h3>
 
             <form onSubmit={handleTopup} className="space-y-6">

@@ -298,7 +298,7 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (currentView) {
       case 'DASHBOARD':
-        return <DashboardHome setView={navigateToView} />;
+        return <DashboardHome setView={navigateToView} canManagePayouts={currentUser?.role === UserRole.ADMIN} />;
       case 'LISTINGS':
         return <ListingsView
           initialListingId={initialListingId}

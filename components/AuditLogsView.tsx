@@ -11,6 +11,9 @@ const PAGE_SIZE = 20;
 
 const getDescription = (log: AuditLog): string => {
   switch (log.action) {
+    case 'RETRY_PAYOUT':
+    case 'SEND_MPESA_PAYMENT':
+      return `KSH ${log.amount ?? '—'} to ${log.phoneNumber ?? '—'}. ${log.reason ?? ''} Reference: ${log.reference ?? '—'}`;
     case 'UPDATE_LISTING_STATUS': {
       const base = `Status changed to ${log.status ?? 'unknown'}`;
       return log.rejectionReason ? `${base}. Reason: ${log.rejectionReason}` : base;

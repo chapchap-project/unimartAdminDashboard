@@ -97,6 +97,9 @@ export interface AuditLog {
   targetId?: string;
   createdAt: string;
   // Spread from details JSON — varies per action type
+  amount?: number;
+  phoneNumber?: string;
+  reference?: string;
   note?: string;
   reason?: string;
   status?: string;
@@ -234,6 +237,21 @@ export interface WalletBalance {
   collection_balance: number;
   service_balance: number;
   currency: string;
+}
+
+export interface AdminPayout {
+  id: string;
+  amount: number;
+  phoneNumber: string;
+  recipientName?: string | null;
+  seller?: { name: string } | null;
+  activePayment?: { state: string; listing?: { title: string } } | null;
+  status: string;
+  merchantReference: string | null;
+  resultDescription?: string | null;
+  payoutReason?: string | null;
+  updatedAt: string;
+  adminActions?: { id: string; kind: string; reference: string; phoneNumber: string; amount: number; reason: string; createdAt: string }[];
 }
 
 export interface Report {

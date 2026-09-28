@@ -1,4 +1,4 @@
-import { DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
+import { AdminPayout, DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
 
 // Default URL for local Unimarket backend
 const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL;
@@ -430,6 +430,22 @@ class ApiService {
   }
 
   // --- Wallet Management ---
+  async getPayouts(): Promise<{ payouts: AdminPayout[] }> {
+    return this.request('admin/payouts');
+  }
+
+  async getPayout(id: string): Promise<{ payout: AdminPayout }> {
+    return this.request(`admin/payouts/${encodeURIComponent(id)}`);
+  }
+
+  async sendPayout(data: { requestId: string; phoneNumber: string; recipientName: string; amount: number; reason: string }): Promise<{ payout: AdminPayout; message: string }> {
+    return this.request('admin/payouts', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async retryPayout(id: string, data: { requestId: string; phoneNumber: string; reason: string; expectedReference: string | null }): Promise<{ payout: AdminPayout; message: string }> {
+    return this.request(`admin/payouts/${encodeURIComponent(id)}/retry`, { method: 'POST', body: JSON.stringify(data) });
+  }
+
   async getWalletBalance(): Promise<WalletBalance> {
     return await this.request<WalletBalance>('admin/wallet/balance');
   }

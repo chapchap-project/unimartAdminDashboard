@@ -136,7 +136,12 @@ class ApiService {
   async getPriorityAlerts(): Promise<PriorityAlert[]> {
     try {
       const dbAlerts = await this.request<PriorityAlert[]>('admin/alerts');
-      return [...this.localAlerts, ...dbAlerts];
+      // Persisted alerts are authoritative, including dismissals and snoozes.
+      this.localAlerts = [];
+      return dbAlerts.filter(alert =>
+        alert.status === 'ACTIVE' || alert.status === 'ESCALATED' ||
+        (alert.status === 'SNOOZED' && !!alert.snoozedUntil && new Date(alert.snoozedUntil) <= new Date())
+      );
     } catch (error) {
       console.warn('Failed to fetch alerts from backend, returning local alerts only.');
       return this.localAlerts;
@@ -144,7 +149,7 @@ class ApiService {
   }
 
   public pushNewAlert(alert: PriorityAlert) {
-    this.localAlerts.unshift(alert);
+    this.localAlerts = [alert, ...this.localAlerts.filter(existing => existing.id !== alert.id)];
   }
 
   async updateAlertStatus(id: string, status: PriorityAlert['status'], snoozedUntil?: string): Promise<void> {

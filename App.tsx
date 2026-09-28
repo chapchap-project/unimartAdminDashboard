@@ -88,6 +88,56 @@ const App: React.FC = () => {
 
   const refreshReportBadge = () => setReportRefreshTick(t => t + 1);
 
+  // Fetch persisted payment issues on every view, including after login or a
+  // disconnected session. Payment details stay behind the authenticated API.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    let loading = false;
+    const seen = new Set<string>();
+    let firstFetch = true;
+    const refreshPaymentAlerts = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const alerts = (await api.getPriorityAlerts()).filter(alert => alert.type === 'PAYMENT');
+        if (cancelled) return;
+        const items: InboxItem[] = alerts.map(alert => ({
+          id: alert.id,
+          type: 'ALERT',
+          title: 'Seller Payment Issue',
+          message: alert.message,
+          isRead: false,
+          createdAt: new Date(alert.createdAt),
+          navigateTo: 'DASHBOARD',
+          data: alert,
+        }));
+        setInbox(prev => [
+          ...items.map(item => ({ ...item, isRead: prev.find(old => old.id === item.id)?.isRead ?? false })),
+          ...prev.filter(item => !(item.type === 'ALERT' && item.data?.type === 'PAYMENT')),
+        ]);
+        for (const item of items) {
+          if (!firstFetch && !seen.has(item.id)) {
+            setNotifications(prev => [{ id: item.id, message: item.message, type: 'ALERT', data: { ...item.data, actionView: 'DASHBOARD' } }, ...prev]);
+            setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== item.id)), 8000);
+          }
+          seen.add(item.id);
+        }
+        firstFetch = false;
+      } catch (error) {
+        console.error('Failed to refresh payment alerts', error);
+      } finally {
+        loading = false;
+      }
+    };
+    refreshPaymentAlerts();
+    const interval = setInterval(refreshPaymentAlerts, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isAuthenticated]);
+
   // Close inbox when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {

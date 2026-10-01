@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ViewState, User } from '../types';
 import {
   LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut,
   GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3,
   Wallet, Bell, TrendingUp, CalendarClock, ChevronDown, ChevronRight,
-  Shield, Terminal, Headphones
+  Shield, Terminal, Headphones, X
 } from 'lucide-react';
 import { api } from '../services/api';
 
 interface SidebarProps {
+  mobileOpen: boolean;
+  onClose: () => void;
   currentView: ViewState;
   setView: (view: ViewState) => void;
   user: User | null;
@@ -19,9 +21,35 @@ interface SidebarProps {
 
 const NOTIFICATION_VIEWS: ViewState[] = ['ANNOUNCEMENTS', 'NOTIFICATIONS', 'SCHEDULED_NOTIFICATIONS', 'NOTIFICATION_ANALYTICS'];
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout, isModerator = false, reportRefreshTick = 0 }) => {
+const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onClose, currentView, setView, user, onLogout, isModerator = false, reportRefreshTick = 0 }) => {
   const [notifExpanded, setNotifExpanded] = useState(NOTIFICATION_VIEWS.includes(currentView));
   const [openReports, setOpenReports] = useState<number | null>(null);
+
+  const navRef = useRef<HTMLElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    navRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeRef.current();
+      if (event.key !== 'Tab') return;
+      const buttons = Array.from(navRef.current?.querySelectorAll<HTMLButtonElement>('button') ?? []).filter(button => button.offsetParent !== null);
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    const breakpoint = window.matchMedia('(min-width: 1024px)');
+    const handleResize = () => { if (breakpoint.matches) closeRef.current(); };
+    document.addEventListener('keydown', handleKey);
+    breakpoint.addEventListener('change', handleResize);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      breakpoint.removeEventListener('change', handleResize);
+      previousFocus?.focus();
+    };
+  }, [mobileOpen]);
 
   // Fetch live pending report count for the badge
   useEffect(() => {
@@ -93,7 +121,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout,
   );
 
   return (
-    <div className="w-60 h-screen fixed left-0 top-0 flex flex-col z-50 bg-slate-900 border-r border-slate-800">
+    <>
+    {mobileOpen && <button aria-label="Close navigation backdrop" tabIndex={-1} onClick={onClose} className="fixed inset-0 bg-slate-950/60 z-40 lg:hidden" />}
+    <aside ref={navRef} id="admin-navigation" aria-label="Main navigation" className={`${mobileOpen ? 'flex' : 'hidden'} lg:flex w-72 max-w-[85vw] lg:w-60 h-dvh fixed left-0 top-0 flex-col z-50 bg-slate-900 border-r border-slate-800`}>
+      <button aria-label="Close navigation" onClick={onClose} className="absolute right-2 top-4 p-2 text-slate-300 lg:hidden"><X size={22} /></button>
       {/* Brand */}
       <div className="px-4 py-5 flex items-center gap-3 border-b border-slate-800">
         <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/50 flex-shrink-0">
@@ -169,14 +200,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user, onLogout,
           </div>
         </div>
         <button
-          onClick={onLogout}
+          onClick={() => { onClose(); onLogout(); }}
           className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-rose-900/20 hover:text-rose-400 rounded-lg transition-colors text-sm font-medium"
         >
           <LogOut size={16} />
           Sign out
         </button>
       </div>
-    </div>
+    </aside>
+    </>
   );
 };
 

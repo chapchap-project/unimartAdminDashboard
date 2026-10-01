@@ -100,7 +100,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ setView, canManagePayouts
     <div className="space-y-8 animate-fade-in pb-10">
       {payoutId && <PayoutDialog payoutId={payoutId} onClose={() => setPayoutId(null)} onQueued={fetchDashboardData} />}
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap gap-3 justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h2>
           <p className="text-slate-500 text-sm mt-0.5">

@@ -61,7 +61,7 @@ const WalletView: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-3 items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Wallet Management</h1>
           <p className="text-slate-500 text-sm mt-1">Send M-Pesa payments and review recorded collections and payouts</p>
@@ -83,7 +83,7 @@ const WalletView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Collection Wallet Card */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+          <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
             <CreditCard size={80} />
           </div>
           <div className="flex items-center gap-4 mb-6">
@@ -108,7 +108,7 @@ const WalletView: React.FC = () => {
 
         {/* Service Wallet Card */}
         <div className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden group ring-2 ring-emerald-500/5">
-           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity text-emerald-600">
+           <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-5 group-hover:opacity-10 transition-opacity text-emerald-600">
             <Wallet size={80} />
           </div>
           <div className="flex items-center gap-4 mb-6">
@@ -162,7 +162,7 @@ const WalletView: React.FC = () => {
 
         {/* Top-up Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="bg-white p-4 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
               <ArrowUpCircle className="text-emerald-500" />
               Fund Safaricom Till

@@ -231,7 +231,7 @@ const ScheduledNotificationsView: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Title + Type */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Title (optional)</label>
                   <input
@@ -286,7 +286,7 @@ const ScheduledNotificationsView: React.FC = () => {
               {/* Target Audience */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Target Audience *</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {([
                     { value: 'all',        label: 'All Users',      icon: Globe },
                     { value: 'university', label: 'By University',  icon: Building2 },

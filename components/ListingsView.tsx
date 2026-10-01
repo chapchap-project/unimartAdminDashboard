@@ -138,26 +138,26 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
   }
 
   return (
-    <div className="flex bg-slate-50 min-h-screen relative overflow-hidden">
+    <div className="flex bg-slate-50 min-w-0 relative overflow-hidden">
       {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ${selectedProduct ? 'mr-[450px]' : ''}`}>
-        <div className="p-8 space-y-8">
+      <div className={`min-w-0 flex-1 transition-all duration-300 ${selectedProduct ? '2xl:mr-[450px]' : ''}`}>
+        <div className="p-0 lg:p-4 space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Listings Triage</h2>
-              <p className="text-slate-500 mt-2 flex items-center gap-2">
+              <p className="text-slate-500 mt-2 flex flex-wrap items-center gap-2">
                 <Zap size={14} className="text-amber-500 fill-amber-500" />
                 Rapid scanning and multi-vector moderation queue.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Pending Review quick-filter */}
               {pendingCount > 0 && (
                 <button
                   onClick={() => setStatusFilter('PENDING_REVIEW')}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${statusFilter === 'PENDING_REVIEW' ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-100' : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'}`}
+                  className={`flex flex-wrap items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${statusFilter === 'PENDING_REVIEW' ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-100' : 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'}`}
                 >
                   <Clock size={13} />
                   Pending Review
@@ -180,7 +180,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
               </div>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg hover:bg-emerald-700 shadow-md shadow-emerald-200 font-bold text-xs flex items-center gap-2 transition-all"
+                className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg hover:bg-emerald-700 shadow-md shadow-emerald-200 font-bold text-xs flex flex-wrap items-center gap-2 transition-all"
               >
                 <ShoppingBag size={14} />
                 Add Listing
@@ -190,7 +190,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
 
           {/* Filter Bar */}
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[300px] relative">
+            <div className="w-full sm:w-auto flex-1 min-w-0 sm:min-w-[240px] relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="text"
@@ -251,24 +251,24 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
 
           {/* Bulk Actions Bar */}
           {selectedIds.length > 0 && (
-            <div className="bg-emerald-900 text-white p-4 rounded-2xl shadow-xl shadow-emerald-200 flex items-center justify-between animate-in slide-in-from-top-4">
+            <div className="bg-emerald-900 text-white p-4 rounded-2xl shadow-xl shadow-emerald-200 flex flex-wrap gap-3 items-center justify-between animate-in slide-in-from-top-4">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-black">
                   {selectedIds.length}
                 </div>
                 <p className="font-bold">Listings Selected</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleBulkAction('APPROVE')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={() => handleBulkAction('APPROVE')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black transition-all flex flex-wrap items-center gap-2">
                   <CheckCircle size={14} /> Approve
                 </button>
-                <button onClick={() => handleBulkAction('HIDE')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
+                <button onClick={() => handleBulkAction('HIDE')} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg text-xs font-black transition-all flex flex-wrap items-center gap-2">
                   <Eye size={14} /> Hide
                 </button>
-                <button onClick={() => handleBulkAction('WARN')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
+                <button onClick={() => handleBulkAction('WARN')} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-xs font-black transition-all flex flex-wrap items-center gap-2">
                   <MessageSquare size={14} /> Warn Seller
                 </button>
-                <button onClick={() => handleBulkAction('REMOVE')} className="px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-black transition-all flex items-center gap-2">
+                <button onClick={() => handleBulkAction('REMOVE')} className="px-4 py-2 bg-rose-500 hover:bg-rose-600 rounded-lg text-xs font-black transition-all flex flex-wrap items-center gap-2">
                   <Trash2 size={14} /> Remove
                 </button>
                 <div className="h-6 w-[1px] bg-white/20 mx-2"></div>
@@ -279,9 +279,13 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
             </div>
           )}
 
+          <label className="flex sm:hidden items-center gap-3 text-sm font-semibold text-slate-600">
+            <input type="checkbox" checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0} onChange={handleSelectAll} />
+            Select all visible listings
+          </label>
           {/* Table View */}
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <table className="w-full text-left border-collapse">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-x-auto">
+            <table className="mobile-cards w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-6 py-4 w-10">
@@ -305,21 +309,22 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                     className={`group hover:bg-emerald-50/30 transition-all cursor-pointer ${selectedProduct?.id === p.id ? 'bg-emerald-50 shadow-inner' : p.status === 'REJECTED' ? 'bg-rose-50/40' : ''}`}
                     onClick={() => setSelectedProduct(p)}
                   >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                    <td data-label="Select listing" className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        aria-label={`Select ${p.title}`}
                         checked={selectedIds.includes(p.id)}
                         onChange={() => handleToggleSelect(p.id)}
                       />
                     </td>
-                    <td className="px-6 py-5">
+                    <td data-label="Listing" className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden shrink-0 border border-slate-200">
                           <img src={p.images[0]} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{p.title}</h4>
                             {p.status === 'REJECTED' && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-rose-100 text-rose-700 border border-rose-200">
@@ -332,7 +337,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-slate-400">
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] font-bold text-slate-400">
                             <span className="flex items-center gap-1 uppercase tracking-widest font-black text-slate-300">{p.category}</span>
                             <span>•</span>
                             <span className="text-emerald-500">KSH {p.price.toLocaleString()}</span>
@@ -342,9 +347,9 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
+                    <td data-label="Risk" className="px-6 py-5">
                       <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ring-4 ${p.riskScore > 7 ? 'bg-rose-500 ring-rose-500/10' :
                             p.riskScore > 4 ? 'bg-amber-500 ring-amber-500/10' :
                               'bg-emerald-500 ring-emerald-500/10'
@@ -365,9 +370,11 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
                           {p.flags.length === 0 && <span className="text-[9px] font-bold text-slate-300 italic">No flags</span>}
                         </div>
                       </div>
+                    </td>
+                    <td data-label="Review status" className="px-6 py-5">
                       <SLABadge createdAt={p.createdAt} riskScore={p.riskScore} />
                     </td>
-                    <td className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td data-label="Actions" className="px-6 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                         {p.status === 'PENDING_REVIEW' ? (
                           <>
@@ -411,7 +418,7 @@ const ListingsView: React.FC<ListingsViewProps> = ({ initialListingId, onClearIn
               </tbody>
             </table>
             {filteredProducts.length === 0 && (
-              <div className="p-20 flex flex-col items-center text-center">
+              <div className="p-6 sm:p-20 flex flex-col items-center text-center">
                 <Search size={48} className="text-slate-200 mb-4" />
                 <h4 className="text-lg font-bold text-slate-400">No listings match your filters</h4>
                 <button onClick={() => { setSearch(''); setCategoryFilter('ALL'); setStatusFilter('ALL'); setRiskFilter(0); }} className="mt-4 text-emerald-500 font-bold hover:underline">
@@ -533,7 +540,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
   }, [product.id]);
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[450px] bg-white shadow-2xl border-l border-slate-200 z-[100] flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-[450px] bg-white shadow-2xl border-l border-slate-200 z-[100] flex flex-col animate-in slide-in-from-right duration-300">
       {/* Panel Header */}
       <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-3">
@@ -545,7 +552,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID: {product.id}</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+        <button onClick={onClose} aria-label="Close listing details" className="p-2 hover:bg-slate-200 rounded-full transition-colors">
           <X size={20} className="text-slate-400" />
         </button>
       </div>
@@ -553,7 +560,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* 1. Header Summary */}
         <section>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col min-[400px]:flex-row gap-3 items-start justify-between">
             <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight uppercase">{product.title}</h4>
             <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${product.status === ProductStatus.ACTIVE ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
               product.status === ProductStatus.REJECTED ? 'bg-rose-50 text-rose-600 border-rose-200' :
@@ -563,7 +570,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
               {product.status}
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-4 gap-2">
+          <div className="mt-4 grid grid-cols-2 min-[400px]:grid-cols-4 gap-2">
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Price</p>
               <p className="text-sm font-black text-emerald-600">KSH {product.price}</p>
@@ -586,7 +593,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
         {/* 2. Imagery */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex flex-wrap items-center gap-2">
               <ImageIcon size={14} /> Images Analysis
             </h5>
             {product.flags.includes('STOCK_PHOTO') && (
@@ -612,7 +619,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <UserCheck size={80} />
           </div>
-          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex flex-wrap items-center gap-2">
             <Users size={14} className="text-emerald-400" /> Seller Trust Snapshot
           </h5>
           <div className="flex items-center gap-4 mb-6">
@@ -624,7 +631,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
               <p className="text-xs text-slate-400 mt-1">{product.seller.email}</p>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-6">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-3 gap-4 border-t border-white/5 pt-6">
             <div>
               <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Account Age</p>
               <p className="text-sm font-bold">{seller?.accountAgeDays || 0} Days</p>
@@ -645,7 +652,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
 
         {/* 4. Heuristics & Explainability */}
         <section>
-          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex flex-wrap items-center gap-2">
             <ShieldCheck size={14} className="text-emerald-500" /> Heuristic Explainer
           </h5>
           <div className="space-y-2">
@@ -695,7 +702,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
                   <p className="text-sm text-emerald-900 leading-relaxed font-medium">
                     {analysis.reasoning}
                   </p>
-                  <div className="mt-4 flex items-center gap-2 bg-emerald-600/5 p-3 rounded-xl border border-emerald-600/10">
+                  <div className="mt-4 flex flex-wrap items-center gap-2 bg-emerald-600/5 p-3 rounded-xl border border-emerald-600/10">
                     <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest shrink-0">Suggested:</span>
                     <span className="text-[11px] font-black text-emerald-800 uppercase tracking-tighter">{analysis.suggestedAction}</span>
                   </div>
@@ -709,7 +716,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
 
         {/* 6. History Log */}
         <section>
-          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex flex-wrap items-center gap-2">
             <History size={14} className="text-slate-400" /> Audit History
           </h5>
           <div className="space-y-4 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
@@ -730,11 +737,11 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
       </div>
 
       {/* Sticky Actions Panel */}
-      <div className="p-6 bg-white border-t border-slate-200 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.1)] space-y-4">
+      <div className="shrink-0 p-4 sm:p-6 bg-white border-t border-slate-200 shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.1)] space-y-4">
         {product.status === 'PENDING_REVIEW' ? (
           <>
             <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest text-center">Awaiting Review — not yet visible to buyers</p>
-            <div className="flex gap-2">
+            <div className="flex flex-col min-[400px]:flex-row gap-2">
               <button
                 onClick={() => handleAction('ACTIVE')}
                 disabled={!!moderating}
@@ -755,7 +762,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
           </>
         ) : (
           <>
-            <div className="flex gap-2">
+            <div className="flex flex-col min-[400px]:flex-row gap-2">
               <button
                 onClick={() => handleAction('ACTIVE')}
                 disabled={!!moderating || product.status === 'ACTIVE'}
@@ -773,7 +780,7 @@ const ListingDetailPanel: React.FC<{ product: Product; seller?: User; onClose: (
                 {moderating === 'HIDDEN' ? <Loader2 size={16} className="animate-spin" /> : 'Hide'}
               </button>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col min-[400px]:flex-row gap-2">
               <button
                 onClick={() => handleAction('WARNED')}
                 disabled={!!moderating}
@@ -844,8 +851,8 @@ const RemovalReasonModal: React.FC<{ isRejection?: boolean; onClose: () => void;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
-        <div className="p-8 pb-4">
+      <div className="bg-white rounded-[32px] shadow-2xl max-w-md w-full max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-slate-100">
+        <div className="p-4 sm:p-8 pb-4">
           <div className={`w-12 h-12 ${isRejection ? 'bg-orange-50' : 'bg-rose-50'} rounded-2xl flex items-center justify-center ${isRejection ? 'text-orange-600' : 'text-rose-600'} mb-6 shadow-inner`}>
             {isRejection ? <XCircle size={24} /> : <Trash2 size={24} />}
           </div>
@@ -859,7 +866,7 @@ const RemovalReasonModal: React.FC<{ isRejection?: boolean; onClose: () => void;
           </p>
         </div>
 
-        <div className="px-8 py-4 space-y-3">
+        <div className="px-4 sm:px-8 py-4 space-y-3">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Primary Reason</p>
           <div className="grid grid-cols-1 gap-2">
             {reasons.map((r) => (
@@ -895,7 +902,7 @@ const RemovalReasonModal: React.FC<{ isRejection?: boolean; onClose: () => void;
           </div>
         </div>
 
-        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+        <div className="p-4 sm:p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
           <button
             onClick={onClose}
             className="flex-1 py-4 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
@@ -928,18 +935,18 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white rounded-[32px] shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100 flex flex-col max-h-[90vh]">
-        <div className="p-8 border-b border-slate-100 flex justify-between items-center">
+        <div className="p-4 sm:p-8 border-b border-slate-100 flex justify-between items-center">
           <div>
             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Add Manual Listing</h3>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Direct Marketplace Injection</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <button onClick={onClose} aria-label="Close listing details" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
             <X size={24} className="text-slate-400" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Target Seller</label>
               <select
@@ -1019,7 +1026,7 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Image URLs (Optional)</label>
             <div className="space-y-2">
               {formData.images.map((url, i) => (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="flex flex-col min-[400px]:flex-row gap-2">
                   <input
                     type="url"
                     value={url}
@@ -1046,7 +1053,7 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
           </div>
         </div>
 
-        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+        <div className="p-4 sm:p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
           <button
             onClick={onClose}
             className="flex-1 py-4 text-sm font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"

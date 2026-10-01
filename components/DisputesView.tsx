@@ -76,7 +76,7 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                     <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Reports & Moderation</h2>
                     <p className="text-slate-500 mt-1">Review and resolve user and listing reports.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {['ALL', 'PENDING', 'RESOLVED', 'DISMISSED'].map((s) => (
                         <button
                             key={s}
@@ -89,8 +89,8 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
             </div>
 
             {/* List Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
+                <table className="mobile-cards w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 border-b border-slate-200">
                         <tr>
                             <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
@@ -104,17 +104,17 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                     <tbody className="divide-y divide-slate-100">
                         {filteredReports.map((report) => (
                             <tr key={report.id} className="hover:bg-slate-50/80 transition-colors group cursor-pointer" onClick={() => setSelectedReport(report)}>
-                                <td className="px-6 py-4">
+                                <td data-label="Type" className="px-6 py-4">
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${report.type === 'LISTING' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-teal-50 text-teal-700 border-teal-100'}`}>
                                         {report.type}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Reporter" className="px-6 py-4">
                                     <div className="font-bold text-slate-800 text-sm">{report.reporter.name}</div>
                                     <div className="text-xs text-slate-400">{report.reporter.email}</div>
                                 </td>
-                                <td className="px-6 py-4 text-sm font-medium text-slate-700 max-w-xs truncate">{report.reason}</td>
-                                <td className="px-6 py-4 text-sm text-slate-600">
+                                <td data-label="Reason" className="px-6 py-4 text-sm font-medium text-slate-700 max-w-xs truncate">{report.reason}</td>
+                                <td data-label="Target" className="px-6 py-4 text-sm text-slate-600">
                                     {report.type === 'LISTING' ? (
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-800">{report.listing?.title || 'Unknown Listing'}</span>
@@ -127,14 +127,14 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                                         </div>
                                     )}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Status" className="px-6 py-4">
                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${report.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                                         }`}>
                                         {report.status === 'PENDING' ? <Clock size={12} /> : <CheckCircle size={12} />}
                                         {report.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td data-label="Action" className="px-6 py-4 text-right">
                                     <button className="text-emerald-600 hover:text-emerald-800 text-sm font-medium">Review</button>
                                 </td>
                             </tr>
@@ -146,8 +146,8 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
             {/* Detailed Modal */}
             {selectedReport && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-200">
+                        <div className="px-4 sm:px-8 py-5 border-b border-slate-100 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500">
                                     <Gavel size={20} />
@@ -162,8 +162,8 @@ const ReportsView: React.FC<ReportsViewProps> = ({ initialReportId, onClearIniti
                             </button>
                         </div>
 
-                        <div className="p-8 space-y-6 overflow-y-auto max-h-[60vh]">
-                            <div className="grid grid-cols-2 gap-8">
+                        <div className="p-4 sm:p-8 space-y-6 overflow-y-auto max-h-[60vh]">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                                 <div>
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Reporter</h3>
                                     <p className="font-bold text-slate-800">{selectedReport.reporter.name}</p>

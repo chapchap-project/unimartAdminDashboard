@@ -32,3 +32,25 @@
     display: none;
   }
 }
+@layer base {
+  button, a, input, select, textarea { touch-action: manipulation; }
+  :focus-visible { outline: 2px solid var(--color-primary-600); outline-offset: 3px; }
+}
+
+@media (max-width: 639px) {
+  /* Avoid focus zoom on phones and give touch controls adequate hit areas. */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; min-width: 0; max-width: 100%; }
+  button, select, input:not([type="checkbox"]):not([type="radio"]) { min-height: 44px; }
+  input[type="checkbox"], input[type="radio"] { min-width: 20px; min-height: 20px; }
+  .admin-content { overflow-wrap: anywhere; }
+  button { overflow-wrap: normal; }
+  .admin-content .grid > *, .admin-content .flex-1 { min-width: 0; }
+  .mobile-cards, .mobile-cards tbody { display: block; width: 100%; }
+  .mobile-cards thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .mobile-cards tbody tr { display: block; padding: 12px; border-bottom: 8px solid #f1f5f9; }
+  .mobile-cards tbody td { display: block; max-width: none; padding: 8px 4px; text-align: left; white-space: normal; overflow: visible; }
+  .mobile-cards td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; }
+  .mobile-cards td > .flex { justify-content: flex-start; flex-wrap: wrap; }
+  .mobile-cards .opacity-0 { opacity: 1; }
+  .mobile-cards button { min-width: 44px; }
+}

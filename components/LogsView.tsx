@@ -89,7 +89,7 @@ const LogsView: React.FC = () => {
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+      <div className="px-6 py-4 border-b border-slate-200 flex flex-wrap gap-3 justify-between items-center bg-slate-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
             <FileText size={20} />
@@ -110,9 +110,9 @@ const LogsView: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
         {/* Sidebar - File List */}
-        <div className="w-72 border-r border-slate-200 flex flex-col bg-slate-50/50">
+        <div className="w-full md:w-72 max-h-52 md:max-h-none shrink-0 border-b md:border-b-0 border-r border-slate-200 flex flex-col bg-slate-50/50">
           <div className="p-4 border-b border-slate-200">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -163,7 +163,7 @@ const LogsView: React.FC = () => {
         </div>
 
         {/* Main Content - Log Viewer */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="min-w-0 min-h-0 flex-1 flex flex-col bg-white">
           {error && (
             <div className="m-4 p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
               <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
@@ -182,8 +182,8 @@ const LogsView: React.FC = () => {
           ) : (
             <>
               {/* File Info Bar */}
-              <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-4 text-sm">
+              <div className="px-6 py-3 border-b border-slate-100 flex flex-wrap gap-3 items-center justify-between bg-white">
+                <div className="flex flex-wrap gap-2 text-sm">
                   <span className="font-semibold text-slate-700">{selectedFile.filename}</span>
                   <span className="text-slate-400">|</span>
                   <span className="text-slate-500">{formatSize(selectedFile.size)}</span>

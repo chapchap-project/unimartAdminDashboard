@@ -18,7 +18,7 @@ import WalletView from './components/WalletView';
 import SupportView from './components/SupportView';
 import CommandPalette from './components/CommandPalette';
 import { ViewState, User, UserRole, MODERATOR_VIEWS } from './types';
-import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck, Headphones, ShoppingBag } from 'lucide-react';
+import { Bell, Search, GraduationCap, LogIn, Lock, AlertCircle, X, UserPlus, Flag, CheckCheck, Headphones, ShoppingBag, Menu } from 'lucide-react';
 import { api } from './services/api';
 import { socketService } from './services/socketService';
 import { Report } from './types';
@@ -49,6 +49,7 @@ const App: React.FC = () => {
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const inboxRef = useRef<HTMLDivElement>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Restore session from stored token on mount
   React.useEffect(() => {
@@ -76,6 +77,7 @@ const App: React.FC = () => {
   const navigateToView = (view: ViewState, params?: { targetId?: string, fraudOnly?: boolean }) => {
     // Silently redirect moderators away from admin-only views
     if (isModerator && !MODERATOR_VIEWS.includes(view)) return;
+    setIsMobileNavOpen(false);
     setView(view);
     if (params?.targetId) {
       if (view === 'LISTINGS') setInitialListingId(params.targetId);
@@ -347,7 +349,7 @@ const App: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <ToastProvider>
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+        <div className="min-h-dvh p-4 flex items-center justify-center bg-slate-50 relative overflow-hidden">
           <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
           <div className="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
 
@@ -422,30 +424,34 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
-        <Sidebar currentView={currentView} setView={navigateToView} user={currentUser} onLogout={handleLogout} isModerator={isModerator} reportRefreshTick={reportRefreshTick} />
+        <Sidebar currentView={currentView} setView={navigateToView} user={currentUser} onLogout={handleLogout} isModerator={isModerator} reportRefreshTick={reportRefreshTick} mobileOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
 
-        <div className="flex-1 ml-60 flex flex-col h-screen overflow-hidden">
-          <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 z-30 shadow-sm">
-            <div className="relative w-96 group cursor-pointer" onClick={() => setIsPaletteOpen(true)}>
+        <div inert={isMobileNavOpen} className="min-w-0 flex-1 lg:ml-60 flex flex-col h-dvh overflow-hidden">
+          <header className="h-16 shrink-0 gap-3 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 z-30 shadow-sm">
+            <button type="button" aria-label="Open navigation" aria-expanded={isMobileNavOpen} aria-controls="admin-navigation" onClick={() => setIsMobileNavOpen(true)} className="lg:hidden shrink-0 p-2 rounded-lg text-slate-700 hover:bg-slate-100"><Menu size={24} /></button>
+            <div className="relative min-w-0 flex-1 max-w-96 group cursor-pointer" onClick={() => setIsPaletteOpen(true)}>
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
                 <Search size={18} />
               </span>
               <input
                 type="text"
                 readOnly
-                placeholder="Press ⌘K for Global Search & Actions..."
+                aria-label="Search dashboard"
+                placeholder="Search dashboard…"
                 className="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent border rounded-lg focus:outline-none cursor-pointer hover:bg-slate-200 transition-all text-sm"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                 <div className="px-1.5 py-0.5 border border-slate-300 rounded text-[10px] font-bold text-slate-500">⌘</div>
                 <div className="px-1.5 py-0.5 border border-slate-300 rounded text-[10px] font-bold text-slate-500">K</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-6">
               {/* Bell / Inbox */}
               <div className="relative" ref={inboxRef}>
                 <button
+                  aria-label="Notifications"
+                  aria-expanded={isInboxOpen}
                   onClick={() => setIsInboxOpen(prev => !prev)}
                   className="relative p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
                 >
@@ -458,7 +464,7 @@ const App: React.FC = () => {
                 </button>
 
                 {isInboxOpen && (
-                  <div className="absolute right-0 top-12 w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
+                  <div className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden">
                     {/* Panel header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                       <div className="flex items-center gap-2">
@@ -540,7 +546,7 @@ const App: React.FC = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
+              <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-slate-100">
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-slate-700">{currentUser?.name || 'Admin User'}</p>
                   <p className="text-xs text-emerald-500 font-medium">{currentUser?.role || 'Staff'}</p>
@@ -560,14 +566,14 @@ const App: React.FC = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-8 overflow-y-auto bg-slate-50 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
+          <main className="admin-content min-w-0 flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-slate-50 scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
             <div className="max-w-7xl mx-auto">
               {renderView()}
             </div>
           </main>
         </div>
 
-        <div className="fixed bottom-6 right-6 z-[100] space-y-3 max-w-sm w-full pointer-events-none">
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:bottom-6 sm:right-6 z-[100] space-y-3 sm:max-w-sm sm:w-full pointer-events-none">
           {notifications.map((notif) => {
             const isNewUser = notif.type === 'NEW_USER';
             const isCritical = notif.type === 'ALERT' && notif.data?.severity === 'CRITICAL';

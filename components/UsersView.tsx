@@ -203,7 +203,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                     <p className="text-slate-500 mt-1">Manage {totalItems.toLocaleString()} registered students.</p>
                 </div>
                 {!isModerator && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setIsAdminModalOpen(true)}
                         className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 shadow-md shadow-emerald-200 font-medium text-sm flex items-center gap-2"
@@ -254,7 +254,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                 </div>
                 <div className="flex flex-col xl:flex-row gap-4 justify-between items-center">
                 <div className="flex flex-wrap gap-2 w-full xl:w-auto">
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         {(['risk', 'reports', 'activity', 'newest'] as const).map((s) => (
                             <button
                                 key={s}
@@ -283,8 +283,8 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
             </div>
 
             {/* Users Table */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
+                <table className="mobile-cards w-full text-left border-collapse">
                     <thead className="bg-slate-50/50 border-b border-slate-200">
                         <tr>
                             <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Student Profile</th>
@@ -308,7 +308,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                     onClick={() => setSelectedUser(user)}
                                     className="hover:bg-slate-50/80 transition-all group cursor-pointer"
                                 >
-                                    <td className="px-6 py-4">
+                                    <td data-label="Student" className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="relative">
                                                 <img
@@ -328,7 +328,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Trust score" className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 max-w-[60px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                                 <div
@@ -343,7 +343,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Activity" className="px-6 py-4">
                                         <div className="flex justify-center gap-3">
                                             <div className="text-center" title="Listings">
                                                 <p className="text-xs font-bold text-slate-700">{user.listingCount}</p>
@@ -361,7 +361,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td data-label="Status" className="px-6 py-4">
                                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${user.status === 'SUSPENDED' ? 'bg-rose-50 text-rose-700 border-rose-100' :
                                             user.status === 'RESTRICTED' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                                                 user.status === 'WARNED' ? 'bg-orange-50 text-orange-700 border-orange-100' :
@@ -374,7 +374,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                             {user.status}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td data-label="Actions" className="px-6 py-4 text-right">
                                         <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors">
                                             <MoreVertical size={16} />
                                         </button>
@@ -391,7 +391,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                         Page {currentPage} of {totalPages} &middot; {totalItems.toLocaleString()} users
                     </p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => fetchUsers(currentPage - 1)}
                             disabled={currentPage === 1}
@@ -444,7 +444,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                                         Edit Profile
                                     </button>
                                 ) : (
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <button onClick={handleUpdateUser} className="text-xs font-bold text-white bg-emerald-600 px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">Save</button>
                                         <button onClick={() => setIsEditingProfile(false)} className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Cancel</button>
                                     </div>
@@ -455,7 +455,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-8 space-y-10">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-10">
                             {/* Trust Summary Area */}
                             <div className="flex items-start gap-6">
                                 <div className="relative">
@@ -782,7 +782,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
             {/* Add Admin Modal */}
             {isAdminModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center p-6 border-b border-slate-100">
                             <h3 className="text-lg font-bold text-slate-800">Add New Administrator</h3>
                             <button onClick={() => setIsAdminModalOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -891,8 +891,8 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
             {/* Premium Suspension Confirm Modal */}
             {showSuspendConfirm && selectedUser && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300 border border-rose-100">
-                        <div className="p-8 text-center">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-300 border border-rose-100">
+                        <div className="p-4 sm:p-8 text-center">
                             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-rose-50/50">
                                 <Ban className="text-rose-500" size={32} />
                             </div>
@@ -930,7 +930,7 @@ const UsersView: React.FC<UsersViewProps> = ({ isModerator = false }) => {
             {/* Direct Notification Modal */}
             {isNotifyModalOpen && selectedUser && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-300">
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-800">Message {selectedUser.name}</h3>
                             <button onClick={() => setIsNotifyModalOpen(false)} className="text-slate-400 hover:text-slate-600">

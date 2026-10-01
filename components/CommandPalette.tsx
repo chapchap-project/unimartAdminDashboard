@@ -127,8 +127,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[200] flex items-start justify-center pt-4 sm:pt-[15vh] p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 max-h-[90dvh] overflow-y-auto flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Input Area */}
                 <div className="p-5 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50">
                     <Search size={22} className="text-slate-400" />
@@ -140,9 +140,9 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, setVie
                         placeholder="Search users, listings, or type '>' for commands..."
                         className="flex-1 bg-transparent border-none focus:outline-none focus:ring-0 text-lg font-medium text-slate-800 placeholder:text-slate-400"
                     />
-                    <div className="flex items-center gap-1 px-2 py-1 bg-white rounded border border-slate-200 shadow-sm">
-                        <span className="text-[10px] font-bold text-slate-400">ESC</span>
-                    </div>
+                    <button type="button" onClick={onClose} aria-label="Close search" className="shrink-0 p-2 bg-white rounded border border-slate-200 shadow-sm text-slate-500">
+                        <X size={18} />
+                    </button>
                 </div>
 
                 {/* Results Area */}

@@ -1,4 +1,4 @@
-import { AdminPayout, DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
+import { AdminRefundPage, RefundStatus, AdminPayout, DashboardMetrics, Product, ProductStatus, User, Report, Transaction, Announcement, AuditLog, SystemHealth, AnalyticsData, Timeframe, PriorityAlert, FraudQueueItem, WalletBalance, SupportTicket, TicketStatus, TicketPriority } from '../types';
 
 // Default URL for local Unimarket backend
 const DEFAULT_API_URL = (import.meta as any).env?.VITE_API_BASE_URL;
@@ -430,6 +430,10 @@ class ApiService {
   }
 
   // --- Wallet Management ---
+  async getRefunds(page = 1, status: RefundStatus | 'ALL' = 'ALL'): Promise<AdminRefundPage> {
+    return this.request(`admin/refunds?page=${page}&limit=25&status=${status}`);
+  }
+
   async getPayouts(): Promise<{ payouts: AdminPayout[] }> {
     return this.request('admin/payouts');
   }

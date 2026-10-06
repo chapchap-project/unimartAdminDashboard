@@ -1,3 +1,4 @@
+import RefundsView from './components/RefundsView';
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import DashboardHome from './components/DashboardHome';
@@ -312,6 +313,8 @@ const App: React.FC = () => {
         return <UsersView isModerator={isModerator} />;
       case 'REPORTS':
         return <ReportsView initialReportId={initialReportId} onClearInitial={() => setInitialReportId(null)} onReportUpdated={refreshReportBadge} />;
+      case 'REFUNDS':
+        return <RefundsView />;
       case 'TRANSACTIONS':
         return <TransactionsView />;
       case 'AUDIT_LOGS':

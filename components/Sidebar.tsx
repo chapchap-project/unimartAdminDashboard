@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, ShoppingBag, AlertCircle, Settings, LogOut,
   GraduationCap, FileText, CreditCard, Megaphone, Activity, BarChart3,
   Wallet, Bell, TrendingUp, CalendarClock, ChevronDown, ChevronRight,
-  Shield, Terminal, Headphones, X
+  Shield, Terminal, Headphones, X, RotateCcw
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -151,6 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onClose, currentView, set
         <NavItem id="LISTINGS" label="Listings" icon={ShoppingBag} />
         <NavItem id="REPORTS" label="Reports" icon={AlertCircle} badge={openReports ?? undefined} />
         <NavItem id="TRANSACTIONS" label="Transactions" icon={CreditCard} />
+        {!isModerator && <NavItem id="REFUNDS" label="Refunds" icon={RotateCcw} />}
         <NavItem id="ANALYTICS" label="Analytics" icon={BarChart3} />
         {!isModerator && <NavItem id="WALLET" label="System Wallet" icon={Wallet} />}
 

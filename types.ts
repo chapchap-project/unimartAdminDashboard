@@ -205,7 +205,7 @@ export interface AnalyticsData {
   revenueByCategory: { category: Category; revenue: number }[];
 }
 
-export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'NOTIFICATION_ANALYTICS' | 'SCHEDULED_NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET' | 'SUPPORT';
+export type ViewState = 'DASHBOARD' | 'USERS' | 'LISTINGS' | 'REPORTS' | 'TRANSACTIONS' | 'REFUNDS' | 'AUDIT_LOGS' | 'ANNOUNCEMENTS' | 'NOTIFICATIONS' | 'NOTIFICATION_ANALYTICS' | 'SCHEDULED_NOTIFICATIONS' | 'SYSTEM_HEALTH' | 'ANALYTICS' | 'SETTINGS' | 'LOGS' | 'WALLET' | 'SUPPORT';
 
 // Views accessible to moderators (subset of all views)
 export const MODERATOR_VIEWS: ViewState[] = [
@@ -264,4 +264,28 @@ export interface Report {
   reporter: { name: string; email: string; credibilityScore: number };
   listing?: { title: string; id: string };
   reportedUser?: { name: string; id: string };
+}
+
+export type RefundStatus = 'QUEUED' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'UNKNOWN';
+export interface AdminRefund {
+  id: string;
+  paymentId: string;
+  reference: string;
+  refundStatus: RefundStatus;
+  refundPhoneNumber: string | null;
+  refundProviderReference: string | null;
+  refundResultDescription: string | null;
+  refundAttempts: number;
+  refundLastAttemptAt: string | null;
+  refundCompletedAt: string | null;
+  eligibleAt: string;
+  updatedAt: string;
+  buyer: { id: string; name: string; email: string; phoneNumber: string | null };
+  seller: { id: string; name: string };
+  listing: { id: string; title: string };
+  payment: { amount: number; currency: string };
+}
+export interface AdminRefundPage {
+  refunds: AdminRefund[];
+  pagination: { page: number; limit: number; total: number; pages: number };
 }

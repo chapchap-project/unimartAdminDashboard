@@ -1000,13 +1000,15 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
             </div>
 
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Price (KSH)</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Price (KSH, minimum 50)</label>
               <input
                 type="number"
                 required
+                min={50}
+                step="any"
                 value={formData.price}
                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
+                placeholder="50.00"
                 className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -1066,8 +1068,14 @@ const AddListingModal: React.FC<{ users: User[], onClose: () => void, onSubmit: 
                 alert('Please fill in title, price, and seller.');
                 return;
               }
+              const price = Number(formData.price);
+              if (!Number.isFinite(price) || price < 50) {
+                alert('Listing price must be at least KSh 50.');
+                return;
+              }
               onSubmit({
                 ...formData,
+                price,
                 images: formData.images.filter(img => img.trim() !== '')
               });
             }}

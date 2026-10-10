@@ -117,8 +117,9 @@ export interface Announcement {
   id: string;
   title: string;
   message: string;
-  targetAudience: 'ALL' | 'BUYERS' | 'SELLERS' | 'FACULTY';
+  targetAudience: 'ALL' | 'BUYERS' | 'SELLERS';
   priority: 'INFO' | 'WARNING' | 'CRITICAL';
+  openPlayStore?: boolean;
   status: 'ACTIVE' | 'EXPIRED';
   postedAt: string;
   expiresAt: string;

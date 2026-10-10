@@ -16,12 +16,14 @@ const AnnouncementsView: React.FC = () => {
     targetAudience: Announcement['targetAudience'];
     priority: Announcement['priority'];
     expiresAt: string;
+    openPlayStore: boolean;
   }>({
     title: '',
     message: '',
     targetAudience: 'ALL',
     priority: 'INFO',
-    expiresAt: ''
+    expiresAt: '',
+    openPlayStore: false
   });
 
   useEffect(() => {
@@ -50,9 +52,10 @@ const AnnouncementsView: React.FC = () => {
         const newAnnouncement = await api.createAnnouncement(formData);
         setAnnouncements([newAnnouncement, ...announcements]);
         setIsModalOpen(false);
-        setFormData({ title: '', message: '', targetAudience: 'ALL', priority: 'INFO', expiresAt: '' });
+        setFormData({ title: '', message: '', targetAudience: 'ALL', priority: 'INFO', expiresAt: '', openPlayStore: false });
     } catch (error) {
         console.error("Failed to create announcement", error);
+        alert(`Couldn't publish the broadcast: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
         setSending(false);
     }
@@ -109,6 +112,7 @@ const AnnouncementsView: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-600">
                     <span className="bg-slate-100 px-2 py-1 rounded text-xs">{ann.targetAudience}</span>
+                    {ann.openPlayStore && <span className="ml-1.5 bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-xs">Play Store link</span>}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
                      {ann.author}
@@ -193,7 +197,6 @@ const AnnouncementsView: React.FC = () => {
                                     <option value="ALL">All Users</option>
                                     <option value="BUYERS">Buyers Only</option>
                                     <option value="SELLERS">Sellers Only</option>
-                                    <option value="FACULTY">Faculty Only</option>
                                 </select>
                             </div>
                         </div>
@@ -219,6 +222,19 @@ const AnnouncementsView: React.FC = () => {
                                 className="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                             />
                         </div>
+
+                        <label className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.openPlayStore}
+                                onChange={(e) => setFormData({...formData, openPlayStore: e.target.checked})}
+                                className="mt-0.5 h-4 w-4 accent-emerald-600"
+                            />
+                            <span>
+                                <span className="block text-sm font-medium text-slate-700">Open Play Store when tapped</span>
+                                <span className="block text-xs text-slate-500">Use for app update announcements. Users are sent a push notification either way.</span>
+                            </span>
+                        </label>
                     </div>
                     
                     <div className="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100">

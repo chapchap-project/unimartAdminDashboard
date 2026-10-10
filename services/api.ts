@@ -281,10 +281,11 @@ class ApiService {
 
         return {
           id: log.id,
-          title: 'System Broadcast',
+          title: details.title || 'System Broadcast',
           message: messageText,
-          targetAudience: 'ALL',
-          priority: 'INFO',
+          targetAudience: details.audience || 'ALL',
+          priority: details.priority || 'INFO',
+          openPlayStore: Boolean(details.openPlayStore),
           status: computedStatus,
           postedAt: log.createdAt.split('T')[0],
           expiresAt: expiresAtRaw.split('T')[0],
@@ -295,10 +296,21 @@ class ApiService {
   }
 
   async createAnnouncement(announcement: any): Promise<Announcement> {
-    const broadcastMessage = `[${announcement.priority}] ${announcement.title}: ${announcement.message}`;
+    // The date input gives "YYYY-MM-DD", but the API requires a full ISO datetime.
+    // Expire at the end of the chosen day in the admin's local time.
+    const expiresAt = announcement.expiresAt
+      ? new Date(`${announcement.expiresAt}T23:59:59.999`).toISOString()
+      : undefined;
     await this.request('admin/notifications/broadcast', {
       method: 'POST',
-      body: JSON.stringify({ message: broadcastMessage, expiresAt: announcement.expiresAt })
+      body: JSON.stringify({
+        title: announcement.title,
+        message: announcement.message,
+        expiresAt,
+        audience: announcement.targetAudience,
+        priority: announcement.priority,
+        openPlayStore: Boolean(announcement.openPlayStore),
+      })
     });
 
     return {
